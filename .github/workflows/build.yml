@@ -1,0 +1,47 @@
+name: Compilar APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Instalar dependencias
+        run: npm install
+      - name: Preparar web y proyecto Android
+        run: |
+          mkdir -p www assets
+          cp index.html www/index.html
+          npx cap add android
+      - name: Icono (si falla, se usa el de serie)
+        continue-on-error: true
+        run: |
+          cp icon-foreground.png assets/icon-foreground.png
+          npx @capacitor/assets generate --android --iconBackgroundColor '#1c2430' --iconBackgroundColorDark '#1c2430'
+      - name: Sincronizar
+        run: npx cap sync android
+      - name: Firma fija y versión
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+          sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
+          sed -i "s/versionName \"1.0\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
+      - name: Compilar
+        run: cd android && ./gradlew assembleDebug
+      - name: Publicar APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Partidos-FCBQ.apk
+          gh release create "v${{ github.run_number }}" Partidos-FCBQ.apk --title "Partidos FCBQ v${{ github.run_number }}" --notes "APK compilada automáticamente."
