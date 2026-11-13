@@ -8,26 +8,29 @@
 <meta name="theme-color" content="#d9531e">
 <link rel="icon" href="icon-192.png">
 <style>
-:root{--bg:#f6f7f9;--card:#fff;--tx:#1c2430;--mu:#5d6877;--ac:#d9531e;--bd:#dde1e7;--wa:#b45309;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171d;--card:#1d232c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#2f3844;--wa:#f5b04c;color-scheme:dark}}
-:root[data-theme="dark"]{--bg:#13171d;--card:#1d232c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#2f3844;--wa:#f5b04c;color-scheme:dark}
+:root{--bg:#f4f5f8;--card:#fff;--soft:#fff4ee;--tx:#17202b;--mu:#667284;--ac:#e25a12;--bd:#f0d9cc;--wa:#b45309;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171d;--card:#1d232c;--soft:#2a211c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#3a3029;--wa:#f5b04c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13171d;--card:#1d232c;--soft:#2a211c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#3a3029;--wa:#f5b04c;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:760px;margin:0 auto;padding:14px}
-h1{font-size:1.3rem;margin:.2rem 0 .8rem}h2{font-size:1.05rem;margin:1.2rem 0 .4rem}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px;margin:10px 0}
-button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;padding:9px 14px;cursor:pointer}
-button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
-textarea{width:100%;min-height:130px;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px;font:14px/1.3 monospace}
-.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
-.sc{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;text-align:center;align-items:center}
-.sc b{font-size:2.2rem}.sc span{font-size:.95rem}.mu{color:var(--mu);font-size:.88rem}.wa{color:var(--wa);font-size:.9rem;margin:.3rem 0}
+main{max-width:640px;margin:0 auto;padding:14px}
+h2{font-size:1.05rem;margin:1.2rem 0 .4rem}
+.hd{display:flex;align-items:center;gap:14px;margin:8px 0 14px}.ic{width:60px;height:60px;border-radius:18px;background:var(--ac);display:grid;place-items:center;box-shadow:0 6px 16px rgba(226,90,18,.3)}.tt{font-size:1.9rem;font-weight:800;line-height:1.1}
+.card{background:linear-gradient(180deg,var(--card),var(--soft));border:1px solid var(--bd);border-radius:20px;padding:14px;margin:12px 0}
+button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:14px;padding:11px 18px;cursor:pointer}
+button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+textarea{width:100%;min-height:120px;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:10px;font:14px/1.3 monospace;margin-top:8px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.mu{color:var(--mu);font-size:.88rem}.wa{color:var(--wa);font-size:.9rem;margin:.3rem 0}
+.em{text-align:center;padding:26px 10px}.em b{display:block;font-size:1.2rem;margin-top:8px}
+.bs{display:grid;grid-template-columns:1fr auto 1fr;gap:2px 6px;text-align:center;align-items:center}.big{font-size:3.4rem;line-height:1.1}.dash{font-size:2rem;color:var(--mu)}
+.tn{font-weight:700;text-transform:uppercase;font-size:.88rem;line-height:1.2;overflow-wrap:anywhere}.td{font-size:.78rem;color:var(--mu)}
+.pgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 0;text-align:center}
+.pc span{display:block;font-size:.78rem;color:var(--mu)}.pc b{font-size:1.25rem}.pc.cur b{color:var(--ac)}.pc i{color:var(--mu);font-style:normal;font-weight:400}
 .sw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.93rem}
 th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}th:first-child,td:first-child{text-align:left}
 tfoot td{font-weight:700}.it{display:flex;justify-content:space-between;gap:8px;align-items:center}
-@media print{:root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff;--card:#fff;--tx:#000;--mu:#444;--bd:#999;--wa:#7a3b00;color-scheme:light}body{background:#fff}button,textarea,details,.np{display:none!important}.card{break-inside:avoid}main{padding:0}}
-.pr{display:none}
-@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}.pr{display:flex;align-items:center;gap:8px;background:#d9531e;color:#fff;padding:8px 12px;border-radius:8px;font-weight:700;font-size:1.1rem;margin-bottom:8px}th{background:#fde7dd}}
+summary{font-weight:700;cursor:pointer}.pr{display:none}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}:root,:root:not([data-theme="light"]),:root[data-theme="dark"]{--bg:#fff;--card:#fff;--soft:#fff;--tx:#000;--mu:#444;--bd:#999;--wa:#7a3b00;--ac:#d9531e;color-scheme:light}body{background:#fff}button,textarea,details,.np{display:none!important}.card{break-inside:avoid;background:#fff}main{padding:0}.pr{display:flex;align-items:center;gap:8px;background:#d9531e;color:#fff;padding:8px 12px;border-radius:8px;font-weight:700;font-size:1.1rem;margin-bottom:8px}th{background:#fde7dd}}
 </style>
 </head>
 <body>
@@ -46,6 +49,8 @@ function parse(text){
   if(di>=0){o.date=t[di];for(var i=di+1;i<t.length&&!/^P\d+$/.test(t[i])&&o.teams.length<2;i++)if(!/^\d+$/.test(t[i]))o.teams.push(t[i])}
   var mi=t.findIndex(function(s){return/^Mostrant \d+ jugades/.test(s)});
   if(mi>=0)o.claimed=+t[mi].match(/\d+/)[0];
+  var fa=t.findIndex(function(x,i){return/^[A-ZÀ-Ú]{2,5}$/.test(x)&&t[i+1]==="Tots"});
+  if(di>=0&&fa>di){var npc=0;for(var i=di;i<fa;i++)if(/^P\d+$/.test(t[i]))npc++;if(npc>=2&&npc<=12)o.nper=npc}
   var ab=false,lim=mi>=0?mi:t.length;
   for(var i=0;i<lim;i++){
     if(/^[A-ZÀ-Ú]{2,5}$/.test(t[i])&&t[i+1]==="Tots"){o.abbr.push(t[i]);ab=true;continue}
@@ -77,6 +82,7 @@ function parse(text){
 function merge(g,o,replace){
   if(o.teams.length===2&&(!g.teams||g.teams.length<2))g.teams=o.teams;
   if(o.date)g.date=o.date;
+  if(o.nper)g.nper=o.nper;
   if(o.abbr.length)g.abbr=o.abbr;
   for(var k in o.roster)g.roster[k]=o.roster[k];
   for(var k in o.markers)g.markers[k]=o.markers[k];
@@ -112,29 +118,47 @@ function tbl(P){
     h+="<tr><td>"+esc(x.d)+" "+esc(n)+"</td><td>"+x.t2+"</td><td>"+x.t3+"</td><td>"+x.tl+"</td><td><b>"+tt+"</b></td><td>"+x.f+"</td></tr>"});
   return h+"</tbody><tfoot><tr><td>Equipo</td><td>"+s[0]+"</td><td>"+s[1]+"</td><td>"+s[2]+"</td><td>"+s[3]+"</td><td>"+s[4]+"</td></tr></tfoot></table></div>";
 }
+function lastBk(){try{var t=+localStorage.getItem(KEY+"_bk");if(!t)return"Todavía no has hecho ninguna copia de seguridad.";var d=Math.floor((Date.now()-t)/864e5);return"Última copia de seguridad: "+(d<1?"hoy":"hace "+d+" días")+"."}catch(e){return""}}
+function nper(g,ps){return g.nper||(Math.max.apply(null,ps.concat([0]))>4?8:4)}
+function pcells(get,N,cp){var h="<div class='pg'>";for(var p=1;p<=N;p++){var v=get(p);h+="<div class='pc"+(p===cp?" cur":"")+"'><span>P"+p+"</span><b>"+(v===undefined?"<i>—</i>":v)+"</b></div>"}return h+"</div>"}
+function board(T,tot,N,gets,cp,sub){
+  var h="<div class='card'><div class='bs'><b class='big'>"+cell(tot[0])+"</b><span class='dash'>–</span><b class='big'>"+cell(tot[1])+"</b>";
+  h+="<div class='tn'>"+esc(T[0])+"</div><div class='td'>"+esc(sub||"")+"</div><div class='tn'>"+esc(T[1])+"</div></div>";
+  return h+"<div class='pgs'>"+pcells(gets[0],N,cp)+pcells(gets[1],N,cp)+"</div>";
+}
+function won(gets,N,cp){var a=0,b=0,n=0;for(var p=1;p<=N;p++){if(p===cp)continue;var x=gets[0](p),y=gets[1](p);if(x===undefined||y===undefined)continue;n++;if(x>y)a++;else if(y>x)b++}
+  return n>=2?"<div class='mu'>Períodos ganados (cuenta propia, no oficial): "+a+" – "+b+"</div>":""}
 function home(){
-  var h="<h1>"+ball(26)+" Seguimiento de partidos</h1><div class='row'><button class='p' onclick='newGame()'>Nuevo partido</button></div>";
-  if(!games.length)h+="<p class='mu'>Todavía no hay partidos guardados.</p>";
+  var h="<div class='hd'><div class='ic'>"+ball(38)+"</div><div><div class='tt'>Partidos</div><div class='mu'>Seguimiento FCBQ</div></div></div>";
+  h+="<div class='card'><b>Nuevo partido</b><div class='mu'>Pega el texto copiado de la página del partido: pestaña «Jugada a jugada», seleccionar todo y copiar.</div><textarea id='nt' placeholder='Pega aquí el texto'></textarea><div class='row'><button class='p' onclick='saveNew()'>Guardar partido</button></div></div>";
+  if(!games.length)h+="<div class='em'>"+ball(64)+"<b>Todavía no hay partidos</b><div class='mu'>Pega arriba el texto de un partido para empezar.</div></div>";
   games.slice().sort(function(a,b){return(b.updated||0)-(a.updated||0)}).forEach(function(g){
-    h+="<div class='card it'><div><b>"+esc(g.kind==="resumen"?g.teams.join(" - "):title(g))+"</b>"+(g.kind==="resumen"?" <span class='mu'>(resumen)</span>":"")+"<div class='mu'>"+esc(g.date||"")+" · actualizado "+fmt(g.updated)+"</div></div><button onclick='openGame("+g.id+")'>Abrir</button></div>"});
-  h+="<div class='card'><b>Importar resumen de una IA</b><div class='mu'>Pega el resumen completo (con tablas). Se guarda como «resumen importado».</div><textarea id='rs' placeholder='Pega aquí el resumen'></textarea><div class='row'><button onclick='impSum()'>Importar resumen</button></div></div>";
-  h+="<div class='card'><b>Copia de seguridad</b><div class='mu'>Guarda este texto en Notas o envíatelo. Para recuperar, pégalo y pulsa Restaurar.</div><textarea id='bk' placeholder='Aquí aparece la copia, o pega una para restaurar'></textarea><div class='row'><button class='p' onclick='expAll()'>Copiar copia de seguridad</button><button onclick='impAll()'>Restaurar desde texto</button></div><div class='mu' id='bkm'></div></div>";
-  h+="<p class='mu'>Los partidos se guardan en este navegador y este dispositivo. Si borras los datos del navegador, se pierden.</p>";
+    var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),t=imp?g.tot:calc(g).tot;
+    h+="<div class='card it'><div><b>"+esc(T[0])+" – "+esc(T[1])+"</b><div><b>"+cell(t[0])+" – "+cell(t[1])+"</b> <span class='mu'>"+(imp?"resumen importado":"con jugadas")+"</span></div><div class='mu'>"+esc(g.date||"")+" · actualizado "+fmt(g.updated)+"</div></div><button onclick='openGame("+g.id+")'>Abrir</button></div>"});
+  h+="<details class='card'><summary>Importar resumen de IA y copia de seguridad</summary><div style='margin-top:10px'><b>Importar resumen de una IA</b><div class='mu'>Pega el resumen completo (con tablas). Se guarda como «resumen importado».</div><textarea id='rs' placeholder='Pega aquí el resumen'></textarea><div class='row'><button onclick='impSum()'>Importar resumen</button></div></div>";
+  h+="<div style='margin-top:10px'><b>Copia de seguridad</b><div class='mu'>Guarda este texto en Notas o envíatelo. Para recuperar, pégalo y pulsa Restaurar.</div><textarea id='bk' placeholder='Aquí aparece la copia, o pega una para restaurar'></textarea><div class='row'><button class='p' onclick='expAll()'>Copiar copia de seguridad</button><button onclick='impAll()'>Restaurar desde texto</button></div><div class='mu' id='bkm'></div></div></details>";
+  h+="<p class='mu' style='text-align:center'>Los partidos se guardan en este navegador o app, en este dispositivo. Se pierden si borras los datos. "+esc(lastBk())+"</p>";
   return h;
 }
 function game(g){
   var r=calc(g),T=g.teams&&g.teams.length===2?g.teams:["Local","Visitante"];
-  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div><h1>"+esc(title(g))+"</h1>";
-  h+="<div class='card'><div class='sc'><div><span>"+esc(T[0])+"</span><br><b>"+r.tot[0]+"</b></div><div class='mu'>puntos</div><div><span>"+esc(T[1])+"</span><br><b>"+r.tot[1]+"</b></div></div>";
-  if(r.per.length){h+="<div class='sw'><table><thead><tr><th></th>"+r.per.map(function(p){return"<th>P"+p+"</th>"}).join("")+"<th>Total</th></tr></thead><tbody>";
-    [0,1].forEach(function(i){h+="<tr><td>"+esc(T[i])+"</td>"+r.per.map(function(p){return"<td>"+(r.pp[i][p]||0)+"</td>"}).join("")+"<td><b>"+r.tot[i]+"</b></td></tr>"});h+="</tbody></table></div>"}
+  var N=nper(g,r.per),mx=r.per.length?r.per[r.per.length-1]:0,cp=(mx&&!g.markers[mx])?mx:0;
+  var gets=[0,1].map(function(i){return function(p){return r.per.indexOf(p)>=0?(r.pp[i][p]||0):undefined}});
+  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row np'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div>";
+  h+=board(T,r.tot,N,gets,cp,g.date)+won(gets,N,cp);
   h+="<div class='mu'>Última actualización: "+fmt(g.updated)+(g.claimed!=null?" · jugadas leídas "+g.parsed+" de "+g.claimed:"")+"</div>";
   r.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
-  h+="<div class='card np'><b>Añadir información</b><div class='mu'>Copia toda la página del partido en la web de la federación y pégala aquí.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
+  h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pégala aquí.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
   [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+tbl(r.pl[i])});
   if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2]);
-  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p><div class='row'><button onclick='del()'>Eliminar partido</button></div>";
+  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p><div class='row np'><button onclick='del()'>Eliminar partido</button></div>";
   return h;
+}
+function saveNew(){
+  var v=document.getElementById("nt").value;if(!v.trim()){msg="No hay texto que guardar.";render();return}
+  var o=parse(v);
+  if(!o.parsed){msg=(/\|/.test(v)&&/PUNTOS|PARCIALES/i.test(v))?"Parece un resumen de IA: impórtalo en la sección «Importar resumen de IA».":"No he encontrado jugadas en el texto. Copia la página completa, con la pestaña «Jugada a jugada» abierta.";render();return}
+  var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};merge(g,o,false);games.push(g);save();cur=g.id;render();
 }
 function render(){var g=games.find(function(x){return x.id===cur});
   document.getElementById("app").innerHTML=(g?(g.kind==="resumen"?gameImp(g):game(g)):home())+(msg?"<div class='wa'>"+esc(msg)+"</div>":"");msg=""}
@@ -143,7 +167,7 @@ function openGame(id){cur=id;render()}
 function goHome(){cur=null;render()}
 function del(){if(!confirm("¿Eliminar este partido guardado?"))return;games=games.filter(function(x){return x.id!==cur});save();cur=null;render()}
 function bkm(t){var e=document.getElementById("bkm");if(e)e.textContent=t}
-function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games});el.value=s;el.select();
+function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
   try{navigator.clipboard.writeText(s).then(function(){bkm("Copiado ("+games.length+" partidos). Pégalo en un sitio seguro.")},function(){bkm("Selecciona el texto y cópialo a mano.")})}catch(e){bkm("Selecciona el texto y cópialo a mano.")}}
 function impAll(){var v=document.getElementById("bk").value,d;
   try{d=JSON.parse(v);if(!d||!Array.isArray(d.games))throw 0}catch(e){bkm("El texto no es una copia válida.");return}
@@ -197,15 +221,14 @@ function timp(P){
   return h+"</tbody></table></div>";
 }
 function gameImp(g){
-  var T=g.teams,ps=Object.keys(g.per).map(Number).sort(function(a,b){return a-b});
-  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div><h1>"+esc(T[0]+" - "+T[1])+"</h1><div class='wa'>Resumen importado: no tiene jugadas y no se puede verificar con la cronología.</div>";
-  h+="<div class='card'><div class='sc'><div><span>"+esc(T[0])+"</span><br><b>"+cell(g.tot[0])+"</b></div><div class='mu'>puntos</div><div><span>"+esc(T[1])+"</span><br><b>"+cell(g.tot[1])+"</b></div></div>";
-  if(ps.length){h+="<div class='sw'><table><thead><tr><th></th>"+ps.map(function(p){return"<th>P"+p+"</th>"}).join("")+"<th>Total</th></tr></thead><tbody>";
-    [0,1].forEach(function(i){h+="<tr><td>"+esc(T[i])+"</td>"+ps.map(function(p){return"<td>"+g.per[p][i]+"</td>"}).join("")+"<td><b>"+cell(g.tot[i])+"</b></td></tr>"});h+="</tbody></table></div>"}
-  h+="<div class='mu'>"+esc(g.date||"")+" · importado "+fmt(g.updated)+"</div>";
+  var T=g.teams,ps=Object.keys(g.per).map(Number),N=nper(g,ps);
+  var gets=[0,1].map(function(i){return function(p){return g.per[p]?g.per[p][i]:undefined}});
+  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row np'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div><div class='wa'>Resumen importado: no tiene jugadas y no se puede verificar con la cronología.</div>";
+  h+=board(T,g.tot,N,gets,0,g.date)+won(gets,N,0);
+  h+="<div class='mu'>Importado "+fmt(g.updated)+"</div>";
   g.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
   [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+(g.pl[i].length?timp(g.pl[i]):"<p class='mu'>Sin jugadores.</p>")});
-  h+="<p class='mu'>Los valores T2, T3 y TL son canastas, tal como vienen en el resumen. «—» significa dato no disponible, no cero.</p><details class='card'><summary>Texto original</summary><pre style='white-space:pre-wrap;font-size:.8rem'>"+esc(g.src)+"</pre></details><div class='row'><button onclick='del()'>Eliminar partido</button></div>";
+  h+="<p class='mu'>Los valores T2, T3 y TL son canastas, tal como vienen en el resumen. «—» significa dato no disponible, no cero.</p><details class='card'><summary>Texto original</summary><pre style='white-space:pre-wrap;font-size:.8rem'>"+esc(g.src)+"</pre></details><div class='row np'><button onclick='del()'>Eliminar partido</button></div>";
   return h;
 }
 function impSum(){var v=document.getElementById("rs").value;if(!v.trim()){msg="No hay texto que importar.";render();return}
