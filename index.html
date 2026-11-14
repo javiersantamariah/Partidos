@@ -144,14 +144,14 @@ function game(g){
   var r=calc(g),T=g.teams&&g.teams.length===2?g.teams:["Local","Visitante"];
   var N=nper(g,r.per),mx=r.per.length?r.per[r.per.length-1]:0,cp=(mx&&!g.markers[mx])?mx:0;
   var gets=[0,1].map(function(i){return function(p){return r.per.indexOf(p)>=0?(r.pp[i][p]||0):undefined}});
-  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row np'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div>";
+  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div>"+topbar()+"";
   h+=board(T,r.tot,N,gets,cp,g.date)+won(gets,N,cp);
   h+="<div class='mu'>Última actualización: "+fmt(g.updated)+(g.claimed!=null?" · jugadas leídas "+g.parsed+" de "+g.claimed:"")+"</div>";
   r.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
-  h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pégala aquí.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
+  if(!rep)h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pégala aquí.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
   [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+tbl(r.pl[i])});
   if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2]);
-  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p><div class='row np'><button onclick='del()'>Eliminar partido</button></div>";
+  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
 }
 function saveNew(){
@@ -164,7 +164,96 @@ function render(){var g=games.find(function(x){return x.id===cur});
   document.getElementById("app").innerHTML=(g?(g.kind==="resumen"?gameImp(g):game(g)):home())+(msg?"<div class='wa'>"+esc(msg)+"</div>":"");msg=""}
 function newGame(){var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};games.push(g);save();cur=g.id;render()}
 function openGame(id){cur=id;render()}
-function goHome(){cur=null;render()}
+var rep=false,repTxt="";
+function v(x){return x===null||x===undefined?"—":x}
+function pe(s){var m={"–":150,"—":151,"’":146,"“":147,"”":148,"…":133};
+  return String(s).split("").map(function(c){var k=m[c]||c.charCodeAt(0);if(k>255)return"?";c=String.fromCharCode(k);return(c==="("||c===")"||c==="\\")?"\\"+c:c}).join("")}
+function pdfBuild(g){
+  var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),r=imp?null:calc(g),tot=imp?g.tot:r.tot;
+  var ps=imp?Object.keys(g.per).map(Number):r.per,N=nper(g,ps);
+  function get(i,p){if(imp)return g.per[p]?g.per[p][i]:undefined;return r.per.indexOf(p)>=0?(r.pp[i][p]||0):undefined}
+  var pages=[],cs,y,OR="0.85 0.33 0.12",GR="0.4 0.4 0.4";
+  function np(){cs=[];pages.push(cs);y=800}
+  function tx(x,yy,s,sz,b,col){cs.push((col||"0 0 0")+" rg BT /"+(b?"F2":"F1")+" "+sz+" Tf "+x+" "+yy+" Td ("+pe(s)+") Tj ET")}
+  function rc(x,yy,w,h,rgb){cs.push(rgb+" rg "+x+" "+yy+" "+w+" "+h+" re f")}
+  function wr(s,n){var o=[],l="";String(s).split(" ").forEach(function(w){if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});if(l)o.push(l);return o}
+  function chk(h){if(y-h<45)np()}
+  np();rc(40,y-22,515,30,OR);tx(50,y-14,"Partidos FCBQ · Informe del partido",13,1,"1 1 1");y-=50;
+  [0,1].forEach(function(i){var x=[40,310][i];tx(x,y-30,String(v(tot[i])),40,1,OR);
+    wr(T[i].toUpperCase(),30).slice(0,2).forEach(function(l,k){tx(x,y-52-k*12,l,10,1)})});
+  y-=95;if(g.date){tx(40,y,g.date,9,0,GR);y-=14}
+  y-=10;
+  [0,1].forEach(function(i){var x=[40,310][i],yy=y;for(var rw=0;rw<Math.ceil(N/4);rw++){for(var c=0;c<4;c++){var p=rw*4+c+1;if(p>N)break;var q=get(i,p);tx(x+c*62,yy,"P"+p,8,0,GR);tx(x+c*62,yy-14,q===undefined?"—":String(q),13,1)}yy-=36}});
+  y-=36*Math.ceil(N/4)+8;
+  [0,1].forEach(function(i){
+    var P=imp?g.pl[i].slice():Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
+    P.sort(function(a,b){return(b.tot||0)-(a.tot||0)});
+    chk(60);tx(40,y,T[i].toUpperCase(),11,1);y-=16;rc(40,y-4,515,14,"0.99 0.91 0.87");
+    [["Jugador",44],["T2",300],["T3",345],["TL",390],["Total",435],["Faltas",495]].forEach(function(h){tx(h[1],y,h[0],9,1)});y-=16;
+    P.forEach(function(p){chk(16);tx(44,y,String(p.n).slice(0,42),9.5,0);[[p.t2,300],[p.t3,345],[p.tl,390],[p.tot,435,1],[p.f,495]].forEach(function(c){tx(c[1],y,String(v(c[0])),9.5,c[2]?1:0)});y-=14});
+    y-=10});
+  chk(30);tx(40,y,"T2, T3 y TL: "+(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". «—» = dato no disponible, no cero.",8,0,GR);y-=14;
+  (imp?g.warn:r.warn).forEach(function(s){wr("Aviso: "+s,105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
+  chk(20);tx(40,y-6,"Generado el "+new Date().toLocaleDateString("es-ES")+" con Partidos FCBQ",8,0,"0.5 0.5 0.5");
+  var objs=[];function add(o){objs.push(o)}
+  add("<< /Type /Catalog /Pages 2 0 R >>");
+  add("<< /Type /Pages /Kids ["+pages.map(function(_,i){return(5+2*i)+" 0 R"}).join(" ")+"] /Count "+pages.length+" >>");
+  add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+  add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+  pages.forEach(function(c,i){var st=c.join("\n");
+    add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+(6+2*i)+" 0 R >>");
+    add("<< /Length "+st.length+" >>\nstream\n"+st+"\nendstream")});
+  var out="%PDF-1.4\n",offs=[];
+  objs.forEach(function(o,i){offs.push(out.length);out+=(i+1)+" 0 obj\n"+o+"\nendobj\n"});
+  var xr=out.length;out+="xref\n0 "+(objs.length+1)+"\n0000000000 65535 f \n";
+  offs.forEach(function(o){out+=("0000000000"+o).slice(-10)+" 00000 n \n"});
+  out+="trailer\n<< /Size "+(objs.length+1)+" /Root 1 0 R >>\nstartxref\n"+xr+"\n%%EOF";
+  return btoa(out);
+}
+function pdfShare(){
+  var g=games.find(function(x){return x.id===cur});if(!g)return;
+  var b64;try{b64=pdfBuild(g)}catch(e){msg="No se pudo generar el PDF: "+e.message;render();return}
+  var T=g.teams&&g.teams.length===2?g.teams:["partido"],name=("Partido-"+T.join("-")).replace(/[^A-Za-z0-9]+/g,"-").slice(0,50)+".pdf";
+  var C=window.Capacitor,P=C&&C.Plugins,FS=P&&P.Filesystem,SH=P&&P.Share;
+  if(FS&&SH){
+    FS.writeFile({path:name,data:b64,directory:"CACHE"}).then(function(r){return SH.share({title:"Informe del partido",files:[r.uri],dialogTitle:"Guardar o enviar el PDF"})})
+     .catch(function(e){var m=String(e&&e.message?e.message:e);if(/cancel/i.test(m))return;msg="No se pudo compartir el PDF: "+m;render()});
+    return}
+  try{var bin=atob(b64),u=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([u],{type:"application/pdf"}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+  catch(e){msg="Este navegador no permite descargar el PDF. Usa «Copiar informe».";render()}
+}
+function topbar(){
+  if(rep)return"<div class='row np'><button onclick='closeRep()'>← Volver</button><button class='p' onclick='pdfShare()'>Descargar PDF</button><button onclick='copyRep()'>Copiar informe</button></div><div class='mu np'>«Descargar PDF» abre el menú de compartir para guardarlo o enviarlo. También puedes copiar el informe como texto o hacer una captura de esta vista.</div>"+(repTxt?"<textarea id='rt' class='np' readonly style='min-height:220px'>"+esc(repTxt)+"</textarea>":"");
+  return"<div class='row np'><button onclick='goHome()'>← Partidos</button><button class='p' onclick='pdfShare()'>Descargar PDF</button><button onclick='openRep()'>Informe</button></div>";
+}
+function openRep(){rep=true;repTxt="";render()}
+function closeRep(){rep=false;repTxt="";render()}
+function repText(g){
+  var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),r=imp?null:calc(g),tot=imp?g.tot:r.tot;
+  var ps=imp?Object.keys(g.per).map(Number).sort(function(a,b){return a-b}):r.per;
+  var L=["INFORME DEL PARTIDO",T[0]+" "+v(tot[0])+" - "+v(tot[1])+" "+T[1]];
+  if(g.date)L.push(g.date);
+  if(imp)L.push("(Resumen importado: no se puede verificar con jugadas)");
+  L.push("","PARCIALES");
+  ps.forEach(function(p){var a=imp?g.per[p][0]:(r.pp[0][p]||0),b=imp?g.per[p][1]:(r.pp[1][p]||0);L.push("P"+p+": "+a+" - "+b)});
+  [0,1].forEach(function(i){
+    L.push("",T[i].toUpperCase());
+    var P=imp?g.pl[i]:Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
+    P=P.slice().sort(function(a,b){return(b.tot||0)-(a.tot||0)});
+    P.forEach(function(x){L.push(x.n+": T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", Faltas "+v(x.f))})
+  });
+  L.push("","T2, T3 y TL: "+(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". «—» = dato no disponible, no cero.");
+  var w=imp?g.warn:r.warn;if(w.length){L.push("","AVISOS");w.forEach(function(x){L.push("- "+x)})}
+  return L.join("\n");
+}
+function copyRep(){
+  var g=games.find(function(x){return x.id===cur});if(!g)return;
+  repTxt=repText(g);
+  try{navigator.clipboard.writeText(repTxt).then(function(){msg="Informe copiado. Pégalo en Notas o WhatsApp."},function(){msg="No se pudo copiar solo: selecciona el texto de abajo y cópialo."}).then(render)}
+  catch(e){msg="No se pudo copiar solo: selecciona el texto de abajo y cópialo.";render()}
+}
+function goHome(){cur=null;rep=false;render()}
 function del(){if(!confirm("¿Eliminar este partido guardado?"))return;games=games.filter(function(x){return x.id!==cur});save();cur=null;render()}
 function bkm(t){var e=document.getElementById("bkm");if(e)e.textContent=t}
 function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
@@ -178,15 +267,20 @@ function ball(n){return'<svg width="'+n+'" height="'+n+'" viewBox="0 0 32 32" st
 function nz(x){return x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
 function tmx(x,T){x=nz(x);if(x.length<2)return-1;for(var i=0;i<2;i++){var t=nz(T[i]);if(t.indexOf(x)>=0||x.indexOf(t)>=0)return i}return-1}
 function nm(x){return/^\d+$/.test(x)?+x:null}
+var HRE=/^(?:#+\s*)?(\d+)\\?\.\s+[A-ZÀ-Ú ]+$/;
 function parseSum(text){
   var L=text.split(/\r?\n/).map(function(s){return s.trim()}).filter(Boolean);
-  var o={id:Date.now(),kind:"resumen",teams:["Local","Visitante"],date:null,per:{},tot:[null,null],pl:[[],[]],warn:[],src:text.slice(0,30000),updated:Date.now()};
+  var o={id:Date.now(),kind:"resumen",teams:["Local","Visitante"],date:null,per:{},tot:[null,null],pl:[[],[]],warn:[],src:text.slice(0,30000),updated:Date.now(),live:0,parcial:false};
+  var named=false;
   var tl=L.find(function(s){return/\s+vs\.?\s+/i.test(s)&&s.length<160});
-  if(tl){var p=tl.replace(/^#+\s*/,"").split("—").pop().split(/\s+vs\.?\s+/i);if(p.length===2)o.teams=[p[0].trim(),p[1].trim()]}
+  if(tl){var p=tl.replace(/^#+\s*/,"").split("—").pop().split(/\s+vs\.?\s+/i);if(p.length===2){o.teams=[p[0].trim(),p[1].trim()];named=true}}
+  if(!named){var s1=0,cand=[];L.forEach(function(l){var h=l.match(HRE);if(h){s1=+h[1];return}
+    if(s1===1&&l[0]!=="|"&&l[0]!=="#"&&l.length<60&&l.indexOf(":")<0&&!/^P\d/.test(l)&&cand.length<2)cand.push(l)});
+    if(cand.length===2)o.teams=cand;else o.warn.push("No he podido leer los nombres de los equipos.")}
   var dm=text.match(/(\d{2}\/\d{2}\/\d{4})/);if(dm)o.date=dm[1];
-  var sec=0,ct=-1,ht=[0,1];
+  var sec=0,ct=-1,ht=[0,1],col={t2:1,t3:2,tl:3,tot:4};
   L.forEach(function(l){
-    var h=l.match(/^(?:#+\s*)?(\d+)\\?\.\s+[A-ZÀ-Ú ]+$/);
+    var h=l.match(HRE);
     if(h){sec=+h[1];ct=-1;return}
     if(l[0]!=="|"){if((sec===3||sec===5)&&l.length<60&&l.indexOf(":")<0){var t=tmx(l,o.teams);if(t>=0)ct=t}return}
     var c=l.split("|").slice(1,-1).map(function(x){return x.trim()});
@@ -194,18 +288,24 @@ function parseSum(text){
     if(sec===2){
       if(/^periodo/i.test(c[0])){ht=[tmx(c[1]||"",o.teams),tmx(c[2]||"",o.teams)];return}
       var pm=c[0].match(/^P(\d+)/),a=nm(c[1]),b=nm(c[2]);
-      if(pm&&a!==null&&b!==null)o.per[+pm[1]]=ht[0]===1?[b,a]:[a,b];
+      if(pm&&a!==null&&b!==null){o.per[+pm[1]]=ht[0]===1?[b,a]:[a,b];
+        var lv=c[0].match(/\((.+)\)/);if(lv&&/juego|registrado/i.test(lv[1])){o.live=+pm[1];o.warn.push("P"+pm[1]+" figura como «"+lv[1]+"»: el marcador puede no ser definitivo.")}}
       else if(/^total/i.test(c[0])&&a!==null&&b!==null)o.tot=ht[0]===1?[b,a]:[a,b];
       return}
+    if(sec===3&&/^jugador/i.test(c[0])){
+      col={t2:-1,t3:-1,tl:-1,tot:-1};
+      c.forEach(function(x,i){if(!i)return;if(/total/i.test(x))col.tot=i;else if(/T2/.test(x))col.t2=i;else if(/T3/.test(x))col.t3=i;else if(/TL/.test(x))col.tl=i});
+      if(/identificad/i.test(c.join(" ")))o.parcial=true;return}
     if(ct<0||/^(jugador|suma|marcador|diferencia|resto)/i.test(c[0]))return;
-    if(sec===3)o.pl[ct].push({n:c[0],t2:nm(c[1]),t3:nm(c[2]),tl:nm(c[3]),tot:nm(c[4]),f:null});
+    function g2(i){return i>=0?nm(c[i]||""):null}
+    if(sec===3)o.pl[ct].push({n:c[0],t2:g2(col.t2),t3:g2(col.t3),tl:g2(col.tl),tot:g2(col.tot),f:null});
     else if(sec===5){var k=nz(c[0]),e=o.pl[ct].find(function(x){return nz(x.n)===k});
       if(e)e.f=nm(c[1]);else o.pl[ct].push({n:c[0],t2:null,t3:null,tl:null,tot:null,f:nm(c[1])})}
   });
   var ks=Object.keys(o.per);
   if(!ks.length)o.warn.push("No he encontrado la tabla de parciales por período.");
   var sm=[0,1].map(function(i){return ks.reduce(function(a,k){return a+o.per[k][i]},0)});
-  if(ks.length){if(o.tot[0]===null)o.tot=sm;else if(sm[0]!==o.tot[0]||sm[1]!==o.tot[1])o.warn.push("Los parciales suman "+sm[0]+"-"+sm[1]+" y el total indicado es "+o.tot[0]+"-"+o.tot[1]+".")}
+  if(ks.length){var st=o.tot;o.tot=sm;if(st[0]!==null&&(sm[0]!==st[0]||sm[1]!==st[1]))o.warn.push("El total indicado en el resumen era "+st[0]+"-"+st[1]+" y los parciales suman "+sm[0]+"-"+sm[1]+". Se muestra la suma de parciales (marcador real)."+(Math.abs(sm[0]-sm[1])>50?" La web oficial limita a 50 puntos la diferencia que muestra.":""))}
   [0,1].forEach(function(i){
     var tt=o.pl[i].reduce(function(a,x){return a+(x.tot||0)},0),sin=o.pl[i].filter(function(x){return x.tot===null}).length;
     if(o.pl[i].length&&o.tot[i]!==null&&tt!==o.tot[i])o.warn.push(o.teams[i]+": los puntos individuales suman "+tt+" y el total del equipo es "+o.tot[i]+" (diferencia "+(tt-o.tot[i])+"). No se han corregido.");
@@ -223,12 +323,12 @@ function timp(P){
 function gameImp(g){
   var T=g.teams,ps=Object.keys(g.per).map(Number),N=nper(g,ps);
   var gets=[0,1].map(function(i){return function(p){return g.per[p]?g.per[p][i]:undefined}});
-  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div><div class='row np'><button onclick='goHome()'>← Partidos</button><button onclick='window.print()'>Descargar PDF</button></div><div class='wa'>Resumen importado: no tiene jugadas y no se puede verificar con la cronología.</div>";
-  h+=board(T,g.tot,N,gets,0,g.date)+won(gets,N,0);
+  var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div>"+topbar()+"<div class='wa'>Resumen importado: no tiene jugadas y no se puede verificar con la cronología.</div>";
+  h+=board(T,g.tot,N,gets,g.live||0,g.date)+won(gets,N,g.live||0);
   h+="<div class='mu'>Importado "+fmt(g.updated)+"</div>";
   g.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
   [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+(g.pl[i].length?timp(g.pl[i]):"<p class='mu'>Sin jugadores.</p>")});
-  h+="<p class='mu'>Los valores T2, T3 y TL son canastas, tal como vienen en el resumen. «—» significa dato no disponible, no cero.</p><details class='card'><summary>Texto original</summary><pre style='white-space:pre-wrap;font-size:.8rem'>"+esc(g.src)+"</pre></details><div class='row np'><button onclick='del()'>Eliminar partido</button></div>";
+  h+="<p class='mu'>"+(g.parcial?"Los valores T2, T3 y TL son puntos identificados solo en parte de las jugadas (por ejemplo, P7 y P8), no el desglose completo.":"Los valores T2, T3 y TL son canastas, tal como vienen en el resumen.")+" «—» significa dato no disponible, no cero.</p><details class='card'><summary>Texto original</summary><pre style='white-space:pre-wrap;font-size:.8rem'>"+esc(g.src)+"</pre></details>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
 }
 function impSum(){var v=document.getElementById("rs").value;if(!v.trim()){msg="No hay texto que importar.";render();return}
