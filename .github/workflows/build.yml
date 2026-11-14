@@ -31,17 +31,20 @@ jobs:
           npx @capacitor/assets generate --android --iconBackgroundColor '#1c2430' --iconBackgroundColorDark '#1c2430'
       - name: Sincronizar
         run: npx cap sync android
-      - name: Firma fija y versión
+      - name: Versión
         run: |
-          mkdir -p ~/.android
-          cp debug.keystore ~/.android/debug.keystore
           sed -i "s/versionCode 1/versionCode ${{ github.run_number }}/" android/app/build.gradle
           sed -i "s/versionName \"1.0\"/versionName \"1.${{ github.run_number }}\"/" android/app/build.gradle
       - name: Compilar
         run: cd android && ./gradlew assembleDebug
+      - name: Firmar con la clave fija del repositorio
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk Partidos-FCBQ.apk
+          APKSIGNER=$(ls ${ANDROID_HOME:-$ANDROID_SDK_ROOT}/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" sign --ks debug.keystore --ks-pass pass:android --key-pass pass:android --min-sdk-version 23 Partidos-FCBQ.apk
+          "$APKSIGNER" verify --print-certs Partidos-FCBQ.apk | grep "SHA-256 digest"
       - name: Publicar APK
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Partidos-FCBQ.apk
           gh release create "v${{ github.run_number }}" Partidos-FCBQ.apk --title "Partidos FCBQ v${{ github.run_number }}" --notes "APK compilada automáticamente."
