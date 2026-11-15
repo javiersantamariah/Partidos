@@ -458,9 +458,14 @@ function getText(id,cb){
   var el=document.getElementById(id),v=el&&el.value;
   if(v&&v.trim()){cb(v);return}
   var fail=function(){msg="No he podido leer el portapapeles (este móvil puede no permitirlo aquí). Pega el texto en el cuadro y vuelve a pulsar el botón.";render()};
-  try{navigator.clipboard.readText().then(function(t){
-    if(!t||!t.trim()){msg="El portapapeles está vacío. Copia primero la página de la FCBQ.";render();return}cb(t)},fail)}catch(e){fail()}
+  var got=function(t){if(!t||!t.trim()){msg="El portapapeles está vacío. Copia primero la página de la FCBQ.";render();return}cb(t)};
+  var CB=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Clipboard;
+  try{
+    if(CB&&CB.read)CB.read().then(function(r){got(r&&r.value)},function(){readWeb(got,fail)});
+    else readWeb(got,fail)
+  }catch(e){fail()}
 }
+function readWeb(got,fail){try{navigator.clipboard.readText().then(got,fail)}catch(e){fail()}}
 function nEv(g){var n=0;for(var k in g.ev)n+=g.ev[k].n;return n}
 function paste(rep){
   var g=games.find(function(x){return x.id===cur});if(!g)return;
