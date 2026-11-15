@@ -128,7 +128,7 @@ var P=[
 [/Los partidos se guardan en este navegador o app, en este dispositivo\. Se pierden si borras los datos\./g,"Games are stored in this browser or app, on this device. They are lost if you clear the data.","Els partits es desen en aquest navegador o app, en aquest dispositiu. Es perden si esborres les dades."],
 [/Todavía no has hecho ninguna copia de seguridad\./g,"You haven't made a backup yet.","Encara no has fet cap còpia de seguretat."],[/«en juego»/g,"«in play»","«en joc»"],[/«último registrado»/g,"«last recorded»","«últim registrat»"],
 [/Última copia de seguridad: hoy\./g,"Last backup: today.","Última còpia de seguretat: avui."],[/Última copia de seguridad: hace (\d+) días\./g,"Last backup: $1 days ago.","Última còpia de seguretat: fa $1 dies."],
-[/Período (\d+): las jugadas suman (\S+) pero la web indica (\S+)\. Faltan o sobran jugadas\./g,"Period $1: the plays add up to $2 but the website says $3. Plays are missing or extra.","Període $1: les jugades sumen $2 però la web indica $3. Falten o sobren jugades."],
+[/Período (\S+): las jugadas suman (\S+) pero la web indica (\S+)\. Faltan o sobran jugadas\./g,"Period $1: the plays add up to $2 but the website says $3. Plays are missing or extra.","Període $1: les jugades sumen $2 però la web indica $3. Falten o sobren jugades."],
 [/La web indicaba (\d+) jugadas y he leído (\d+) en la última pegada\./g,"The website said $1 plays and I read $2 in the last paste.","La web indicava $1 jugades i n'he llegit $2 a l'últim enganxat."],
 [/Hay jugadores sin equipo asignado: no se ha leído bien la plantilla de uno de los equipos\. Los totales por equipo no son fiables\./g,"Some players have no team assigned: one team's roster was not read properly. Team totals are not reliable.","Hi ha jugadors sense equip assignat: no s'ha llegit bé la plantilla d'un dels equips. Els totals per equip no són fiables."],
 [/P(\d+) figura como «(.+?)»: el marcador puede no ser definitivo\./g,"P$1 is listed as «$2»: the score may not be final.","P$1 figura com a «$2»: el marcador pot no ser definitiu."],
@@ -167,7 +167,15 @@ function parse(text){
   var mi=t.findIndex(function(s){return/^Mostrant \d+ jugades/.test(s)});
   if(mi>=0)o.claimed=+t[mi].match(/\d+/)[0];
   var fa=t.findIndex(function(x,i){return t[i+1]==="Tots"&&t[i+2]==="·"});
-  if(di>=0&&fa>di){var npc=0;for(var i=di;i<fa;i++)if(/^P\d+$/.test(t[i]))npc++;if(npc>=2&&npc<=12)o.nper=npc}
+  if(di>=0&&fa>di){var lab=[],li=-1;for(var i=di;i<fa;i++)if(/^(P|PR)\d+$/.test(t[i])){lab.push(t[i]);li=i}
+    if(lab.length>=2&&lab.length<=12){o.labels=lab;o.nper=lab.length;
+      var NN=lab.length,HA=[],HB=[],jj=li+2;
+      while(HA.length<NN&&/^\d+$/.test(t[jj]||"")){HA.push(+t[jj]);jj++}
+      jj++;
+      while(HB.length<NN&&/^\d+$/.test(t[jj]||"")){HB.push(+t[jj]);jj++}
+      if(HA.length===NN&&HB.length===NN){o.hdr={};for(var kk=0;kk<NN;kk++)o.hdr[kk+1]=[HA[kk],HB[kk]]}}}
+  var RG=o.labels?o.labels.filter(function(x){return/^P\d+$/.test(x)}).length:4;
+  function mapp(m){var n=+m[2];return m[1]==="Quart"?n:RG+n}
   var ab=false,lim=mi>=0?mi:t.length;
   for(var i=0;i<lim;i++){
     if(t[i+1]==="Tots"&&t[i+2]==="·"){o.abbr.push(t[i]);ab=true;continue}
@@ -177,11 +185,11 @@ function parse(text){
   var st=mi>=0?mi+1:0,end=t.length;
   for(var i=st;i<t.length-1;i++)if(t[i]==="Quart"&&t[i+1]==="Tots"){end=i;break}
   var first=null;
-  for(var i=st;i<end;i++){var m=t[i].match(/^Final Quart (\d+)$/);
-    if(m){var n=+m[1];if(first===null)first=n;var sc=(t[i+1]||"").match(/^(\d+)\s*·\s*(\d+)$/);if(sc)o.markers[n]=[+sc[1],+sc[2]]}}
+  for(var i=st;i<end;i++){var m=t[i].match(/^Final (Quart|Pròrroga|Prorroga) (\d+)$/);
+    if(m){var n=mapp(m);if(first===null)first=n;var sc=(t[i+1]||"").match(/^(\d+)\s*·\s*(\d+)$/);if(sc)o.markers[n]=[+sc[1],+sc[2]]}}
   var per=first===null?null:first+1;
   for(var i=st;i<end;i++){
-    var m=t[i].match(/^Final Quart (\d+)$/);if(m){per=+m[1];continue}
+    var m=t[i].match(/^Final (Quart|Pròrroga|Prorroga) (\d+)$/);if(m){per=mapp(m);continue}
     if(!ACT.test(t[i]))continue;
     o.parsed++;
     var act=t[i],name=t[i-1],kind=PTS[act];
@@ -201,6 +209,8 @@ function merge(g,o,replace){
   if(o.teams.length===2&&(!g.teams||g.teams.length<2))g.teams=o.teams;
   if(o.date)g.date=o.date;
   if(o.nper)g.nper=o.nper;
+  if(o.labels)g.labels=o.labels;
+  if(o.hdr)g.hdr=o.hdr;
   if(o.abbr.length)g.abbr=o.abbr;
   for(var k in o.roster)g.roster[k]=o.roster[k];
   for(var k in o.markers)g.markers[k]=o.markers[k];
@@ -218,11 +228,16 @@ function calc(g){
   }
   r.pl.forEach(function(P){for(var n in P)if(P[n].fm)P[n].f=P[n].fm});
   for(var k in g.markers)per[k]=1;
+  if(g.hdr)for(var k in g.hdr)if(g.hdr[k][0]||g.hdr[k][1])per[k]=1;
   r.per=Object.keys(per).map(Number).sort(function(a,b){return a-b});
   r.warn=[];
-  r.per.forEach(function(p){var m=g.markers[p];if(!m)return;
-    var a=r.pp[0][p]||0,b=r.pp[1][p]||0;
-    if(a!==m[0]||b!==m[1])r.warn.push("Período "+p+": las jugadas suman "+a+"-"+b+" pero la web indica "+m[0]+"-"+m[1]+". Faltan o sobran jugadas.")});
+  var ca=0,cb=0;
+  r.per.forEach(function(p){var a=r.pp[0][p]||0,b=r.pp[1][p]||0;ca+=a;cb+=b;
+    var m=g.hdr&&g.hdr[p],ok=true,lab=(g.labels&&g.labels[p-1])||p;
+    if(m)ok=a===m[0]&&b===m[1];
+    else if(g.markers[p]){m=g.markers[p];ok=(a===m[0]&&b===m[1])||(ca===m[0]&&cb===m[1])}
+    else return;
+    if(!ok)r.warn.push("Período "+lab+": las jugadas suman "+a+"-"+b+" pero la web indica "+m[0]+"-"+m[1]+". Faltan o sobran jugadas.")});
   if(g.claimed!=null&&g.parsed!==g.claimed)r.warn.push("La web indicaba "+g.claimed+" jugadas y he leído "+g.parsed+" en la última pegada.");
   if(r.pl[2]&&Object.keys(r.pl[2]).length)r.warn.push("Hay jugadores sin equipo asignado: no se ha leído bien la plantilla de uno de los equipos. Los totales por equipo no son fiables.");
   return r;
@@ -239,13 +254,14 @@ function tbl(P){
 }
 function lastBk(){try{var t=+localStorage.getItem(KEY+"_bk");if(!t)return"Todavía no has hecho ninguna copia de seguridad.";var d=Math.floor((Date.now()-t)/864e5);return"Última copia de seguridad: "+(d<1?"hoy":"hace "+d+" días")+"."}catch(e){return""}}
 function nper(g,ps){return g.nper||(Math.max.apply(null,ps.concat([0]))>4?8:4)}
-function pcells(get,N,cp){var h="<div class='pg'>";for(var p=1;p<=N;p++){var v=get(p);h+="<div class='pc"+(p===cp?" cur":"")+"'><span>P"+p+"</span><b>"+(v===undefined?"<i>—</i>":v)+"</b></div>"}return h+"</div>"}
+var LAB=null;function lb(p){return LAB&&LAB[p-1]||"P"+p}
+function pcells(get,N,cp){var c=N<=5?N:4,h="<div class='pg' style='grid-template-columns:repeat("+c+",1fr)'>";for(var p=1;p<=N;p++){var v=get(p);h+="<div class='pc"+(p===cp?" cur":"")+"'><span>"+lb(p)+"</span><b>"+(v===undefined?"<i>—</i>":v)+"</b></div>"}return h+"</div>"}
 function board(T,tot,N,gets,cp,sub){
   var h="<div class='card'><div class='bs'><b class='big'>"+cell(tot[0])+"</b><span class='dash'>–</span><b class='big'>"+cell(tot[1])+"</b>";
   h+="<div class='tn'>"+esc(T[0])+"</div><div class='td'>"+esc(sub||"")+"</div><div class='tn'>"+esc(T[1])+"</div></div>";
   return h+"<div class='pgs'>"+pcells(gets[0],N,cp)+pcells(gets[1],N,cp)+"</div>";
 }
-function won(gets,N,cp){var a=0,b=0,n=0;for(var p=1;p<=N;p++){if(p===cp)continue;var x=gets[0](p),y=gets[1](p);if(x===undefined||y===undefined)continue;n++;if(x>y)a++;else if(y>x)b++}
+function won(gets,N,cp){if(N!==8)return"";var a=0,b=0,n=0;for(var p=1;p<=N;p++){if(p===cp)continue;var x=gets[0](p),y=gets[1](p);if(x===undefined||y===undefined)continue;n++;if(x>y)a++;else if(y>x)b++}
   return n>=2?"<div class='mu'>Períodos ganados (cuenta propia, no oficial): "+a+" – "+b+"</div>":""}
 function home(){
   var h="<div class='hd'><div class='ic'>"+ball(38)+"</div><div><div class='tt'>"+esc(cfg.title||"Partidos")+"</div><div class='mu'>Seguimiento FCBQ</div></div><button onclick='openSet()' style='margin-left:auto;font-size:1.3rem;padding:8px 12px'>⚙</button></div>";
@@ -259,7 +275,7 @@ function home(){
   h+="<p class='mu' style='text-align:center'>Los partidos se guardan en este navegador o app, en este dispositivo. Se pierden si borras los datos. "+esc(lastBk())+"</p>";
   return h;
 }
-function game(g){
+function game(g){LAB=g.labels||null;
   var r=calc(g),T=g.teams&&g.teams.length===2?g.teams:["Local","Visitante"];
   var N=nper(g,r.per),mx=r.per.length?r.per[r.per.length-1]:0,cp=(mx&&!g.markers[mx])?mx:0;
   var gets=[0,1].map(function(i){return function(p){return r.per.indexOf(p)>=0?(r.pp[i][p]||0):undefined}});
@@ -303,8 +319,8 @@ function pdfBuild(g){
     wr(T[i].toUpperCase(),30).slice(0,2).forEach(function(l,k){tx(x,y-52-k*12,l,10,1)})});
   y-=95;if(g.date){tx(40,y,g.date,9,0,GR);y-=14}
   y-=10;
-  [0,1].forEach(function(i){var x=[40,310][i],yy=y;for(var rw=0;rw<Math.ceil(N/4);rw++){for(var c=0;c<4;c++){var p=rw*4+c+1;if(p>N)break;var q=get(i,p);tx(x+c*62,yy,"P"+p,8,0,GR);tx(x+c*62,yy-14,q===undefined?"—":String(q),13,1)}yy-=36}});
-  y-=36*Math.ceil(N/4)+8;
+  [0,1].forEach(function(i){var x=[40,310][i],yy=y;for(var rw=0;rw<Math.ceil(N/(N<=5?N:4));rw++){for(var c=0;c<(N<=5?N:4);c++){var p=rw*(N<=5?N:4)+c+1;if(p>N)break;var q=get(i,p);tx(x+c*Math.floor(250/(N<=5?N:4)),yy,(g.labels&&g.labels[p-1]||"P"+p),8,0,GR);tx(x+c*Math.floor(250/(N<=5?N:4)),yy-14,q===undefined?"—":String(q),13,1)}yy-=36}});
+  y-=36*Math.ceil(N/(N<=5?N:4))+8;
   [0,1].forEach(function(i){
     var P=imp?g.pl[i].slice():Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
     P.sort(function(a,b){return(b.tot||0)-(a.tot||0)});
@@ -356,7 +372,7 @@ function repText(g){
   if(g.date)L.push(g.date);
   if(imp)L.push(TS("(Resumen importado: no se puede verificar con jugadas)"));
   L.push("",TS("PARCIALES"));
-  ps.forEach(function(p){var a=imp?g.per[p][0]:(r.pp[0][p]||0),b=imp?g.per[p][1]:(r.pp[1][p]||0);L.push("P"+p+": "+a+" - "+b)});
+  ps.forEach(function(p){var a=imp?g.per[p][0]:(r.pp[0][p]||0),b=imp?g.per[p][1]:(r.pp[1][p]||0);L.push((g.labels&&g.labels[p-1]||"P"+p)+": "+a+" - "+b)});
   [0,1].forEach(function(i){
     L.push("",T[i].toUpperCase());
     var P=imp?g.pl[i]:Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
@@ -440,7 +456,7 @@ function timp(P){
   P.slice().sort(function(a,b){return(b.tot||0)-(a.tot||0)}).forEach(function(x){h+="<tr><td>"+esc(x.n)+"</td><td>"+cell(x.t2)+"</td><td>"+cell(x.t3)+"</td><td>"+cell(x.tl)+"</td><td><b>"+cell(x.tot)+"</b></td><td>"+cell(x.f)+"</td></tr>"});
   return h+"</tbody></table></div>";
 }
-function gameImp(g){
+function gameImp(g){LAB=null;
   var T=g.teams,ps=Object.keys(g.per).map(Number),N=nper(g,ps);
   var gets=[0,1].map(function(i){return function(p){return g.per[p]?g.per[p][i]:undefined}});
   var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div>"+topbar()+"<div class='wa'>Resumen importado: no tiene jugadas y no se puede verificar con la cronología.</div>";
