@@ -12,16 +12,16 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171d;--card:#1d232c;--soft:#2a211c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#3a3029;--wa:#f5b04c;color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#13171d;--card:#1d232c;--soft:#2a211c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#3a3029;--wa:#f5b04c;color-scheme:dark}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:var(--bg);color:var(--tx);font:1rem/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 main{max-width:640px;margin:0 auto;padding:14px}
 h2{font-size:1.05rem;margin:1.2rem 0 .4rem}
-.hd{display:flex;align-items:center;gap:14px;margin:8px 0 14px}.ic{width:60px;height:60px;border-radius:18px;background:var(--ac);display:grid;place-items:center;box-shadow:0 6px 16px rgba(226,90,18,.3)}.tt{font-size:1.9rem;font-weight:800;line-height:1.1}
+.hd{display:flex;align-items:center;gap:14px;margin:8px 0 14px}.ic{width:60px;height:60px;border-radius:18px;background:var(--ac);color:var(--acx,#fff);display:grid;place-items:center;box-shadow:0 6px 16px rgba(226,90,18,.3)}.tt{font-size:1.9rem;font-weight:800;line-height:1.1}
 .card{background:linear-gradient(180deg,var(--card),var(--soft));border:1px solid var(--bd);border-radius:20px;padding:14px;margin:12px 0}
 button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:14px;padding:11px 18px;cursor:pointer}
-button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+button.p{background:var(--ac);border-color:var(--ac);color:var(--acx,#fff);font-weight:700}
 textarea{width:100%;min-height:120px;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:10px;font:14px/1.3 monospace;margin-top:8px}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.mu{color:var(--mu);font-size:.88rem}.wa{color:var(--wa);font-size:.9rem;margin:.3rem 0}
-.em{text-align:center;padding:26px 10px}.em b{display:block;font-size:1.2rem;margin-top:8px}
+.em{text-align:center;padding:26px 10px;color:var(--ac)}.em b,.em div{color:var(--tx)}.em div.mu{color:var(--mu)}input[type=text]{width:100%;box-sizing:border-box;font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:10px}.sw2{width:44px;height:44px;border-radius:50%;padding:0;border:3px solid transparent}.sw2.on{border-color:var(--tx)}.lg{padding:8px 10px}.em b{display:block;font-size:1.2rem;margin-top:8px}
 .bs{display:grid;grid-template-columns:1fr auto 1fr;gap:2px 6px;text-align:center;align-items:center}.big{font-size:3.4rem;line-height:1.1}.dash{font-size:2rem;color:var(--mu)}
 .tn{font-weight:700;text-transform:uppercase;font-size:.88rem;line-height:1.2;overflow-wrap:anywhere}.td{font-size:.78rem;color:var(--mu)}
 .pgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 0;text-align:center}
@@ -37,6 +37,123 @@ summary{font-weight:700;cursor:pointer}.pr{display:none}
 <main id="app"></main>
 <script>
 var KEY="fcbq_partidos_v1",games=load(),cur=null,msg="";
+var cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:"es"},setv=false;
+(function(){try{var c=JSON.parse(localStorage.getItem(KEY+"_cfg")||"null");if(c)for(var k in c)cfg[k]=c[k]}catch(e){}})();
+function saveCfg(){try{localStorage.setItem(KEY+"_cfg",JSON.stringify(cfg))}catch(e){}}
+var LOC={es:"es-ES",en:"en-GB",ca:"ca-ES"};
+function rgb(h){var n=parseInt(h.slice(1),16);return[n>>16&255,n>>8&255,n&255]}
+function mixw(h,w){return"rgb("+rgb(h).map(function(v){return Math.round(v+(255-v)*w)})+")"}
+function lum(h){var c=rgb(h).map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*c[0]+.7152*c[1]+.0722*c[2]}
+function applyCfg(){
+  var r=document.documentElement,c=rgb(cfg.ac);
+  var dark=cfg.mode==="dark"||(cfg.mode==="auto"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);
+  if(cfg.mode==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",cfg.mode);
+  var ac=dark?mixw(cfg.ac,.25):cfg.ac;
+  r.style.setProperty("--ac",ac);r.style.setProperty("--acx",lum(cfg.ac)>.5&&!dark?"#111":(dark?"#111":"#fff"));
+  r.style.setProperty("--soft","rgba("+c+",.10)");r.style.setProperty("--bd","rgba("+c+",.30)");
+  r.style.fontSize=[16,18,20][cfg.size]+"px";r.lang=cfg.lang;
+  var m=document.querySelector('meta[name="theme-color"]');if(m)m.content=cfg.ac;
+}
+var LG={ball:'<circle cx="16" cy="16" r="13"/><path d="M16 3v26M3 16h26M6 6c6 5 6 15 0 20M26 6c-6 5-6 15 0 20"/>',
+hoop:'<rect x="7" y="3" width="18" height="12" rx="1"/><rect x="12" y="8" width="8" height="7"/><path d="M9 15h14M11 15l2 12M16 15v12M21 15l-2 12M12 21h8"/>',
+trophy:'<path d="M9 4h14v8a7 7 0 0 1-14 0zM9 7H4v2a5 5 0 0 0 5 5M23 7h5v2a5 5 0 0 1-5 5M16 19v5M11 28h10M13 24h6"/>',
+whistle:'<circle cx="11" cy="20" r="7"/><path d="M16 15l12-5v6l-8 3M11 13V8"/>',
+jersey:'<path d="M11 4L4 8l3 6 3-2v16h12V12l3 2 3-6-7-4c-1 3-4 3-5 3s-4 0-5-3z"/>'};
+function ic(n,z){return'<svg width="'+z+'" height="'+z+'" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">'+(LG[n]||LG.ball)+'</svg>'}
+function ball(z){return ic(cfg.logo,z)}
+function setCfg(k,v){cfg[k]=k==="size"?+v:v;saveCfg();applyCfg();render()}
+function resetCfg(){cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:cfg.lang};saveCfg();applyCfg();render()}
+function openSet(){setv=true;render()}
+function closeSet(){setv=false;render()}
+function cbtn(l,k,v,on){return"<button class='"+(on?"p":"")+"' onclick='setCfg(\""+k+"\",\""+v+"\")'>"+l+"</button>"}
+function settings(){
+  var h="<div class='row np'><button onclick='closeSet()'>← Partidos</button></div><div class='tt' style='font-size:1.5rem'>Ajustes</div>";
+  h+="<div class='card'><b>Idioma</b><div class='row'>"+cbtn("Castellano","lang","es",cfg.lang==="es")+cbtn("English","lang","en",cfg.lang==="en")+cbtn("Català","lang","ca",cfg.lang==="ca")+"</div></div>";
+  h+="<div class='card'><b>Aspecto</b><div class='row'>"+cbtn("Automático","mode","auto",cfg.mode==="auto")+cbtn("Claro","mode","light",cfg.mode==="light")+cbtn("Oscuro","mode","dark",cfg.mode==="dark")+"</div></div>";
+  h+="<div class='card'><b>Color principal</b><div class='row'>"+["#e25a12","#1f6fd1","#2e9e5b","#d63a3a","#7b4fd1","#12a6a0","#3a4350"].map(function(c){return"<button class='sw2"+(cfg.ac===c?" on":"")+"' style='background:"+c+"' onclick='setCfg(\"ac\",\""+c+"\")'></button>"}).join("")+"<input type='color' value='"+cfg.ac+"' onchange='setCfg(\"ac\",this.value)' style='width:44px;height:44px;border:0;background:none;padding:0'></div></div>";
+  h+="<div class='card'><b>Símbolo del logo</b><div class='row'>"+Object.keys(LG).map(function(n){return"<button class='lg"+(cfg.logo===n?" p":"")+"' onclick='setCfg(\"logo\",\""+n+"\")'>"+ic(n,28)+"</button>"}).join("")+"</div></div>";
+  h+="<div class='card'><b>Nombre de la cabecera</b><input type='text' maxlength='24' value='"+esc(cfg.title)+"' placeholder='Partidos' onchange='setCfg(\"title\",this.value)'></div>";
+  h+="<div class='card'><b>Tamaño del texto</b><div class='row'>"+cbtn("Normal","size",0,cfg.size===0)+cbtn("Grande","size",1,cfg.size===1)+cbtn("Muy grande","size",2,cfg.size===2)+"</div></div>";
+  h+="<div class='card'><b>Vista previa</b><div class='bs' style='margin-top:8px'><b class='big' style='color:var(--ac)'>74</b><span class='dash'>–</span><b class='big'>5</b><div class='tn'>Equipo A</div><div class='td'></div><div class='tn'>Equipo B</div></div></div>";
+  h+="<div class='row'><button onclick='resetCfg()'>Restaurar valores originales</button></div>";
+  return h;
+}
+var D={
+"Partidos":["Games","Partits"],"← Partidos":["← Games","← Partits"],"Seguimiento FCBQ":["FCBQ tracker","Seguiment FCBQ"],
+"Nuevo partido":["New game","Nou partit"],"Pegar y guardar partido":["Paste and save game","Enganxa i desa el partit"],
+"Copia la página del partido (pestaña «Jugada a jugada», seleccionar todo, copiar) y pulsa el botón: la app lee el portapapeles. Si no puede, pega el texto en el cuadro.":["Copy the match page (\"Jugada a jugada\" tab, select all, copy) and press the button: the app reads the clipboard. If it can't, paste the text into the box.","Copia la pàgina del partit (pestanya «Jugada a jugada», selecciona-ho tot, copia) i prem el botó: l'app llegeix el porta-retalls. Si no pot, enganxa el text al quadre."],
+"Todavía no hay partidos":["No games yet","Encara no hi ha partits"],
+"Pega arriba el texto de un partido para empezar.":["Paste a game's text above to start.","Enganxa a dalt el text d'un partit per començar."],
+"resumen importado":["imported summary","resum importat"],"con jugadas":["with plays","amb jugades"],"Abrir":["Open","Obre"],
+"Importar resumen de IA y copia de seguridad":["Import AI summary and backup","Importa un resum d'IA i còpia de seguretat"],
+"Importar resumen de una IA":["Import an AI summary","Importa un resum d'una IA"],
+"Pega el resumen completo (con tablas). Se guarda como «resumen importado».":["Paste the full summary (with tables). It is saved as an \"imported summary\".","Enganxa el resum complet (amb taules). Es desa com a «resum importat»."],
+"Importar resumen":["Import summary","Importa el resum"],"Copia de seguridad":["Backup","Còpia de seguretat"],
+"Guarda este texto en Notas o envíatelo. Para recuperar, pégalo y pulsa Restaurar.":["Save this text in Notes or send it to yourself. To recover, paste it and press Restore.","Desa aquest text a Notes o envia-te'l. Per recuperar-lo, enganxa'l i prem Restaura."],
+"Copiar copia de seguridad":["Copy backup","Copia la còpia de seguretat"],"Restaurar desde texto":["Restore from text","Restaura des del text"],
+"Todavía no has hecho ninguna copia de seguridad.":["You haven't made a backup yet.","Encara no has fet cap còpia de seguretat."],
+"Descargar PDF":["Download PDF","Descarrega el PDF"],"Informe":["Report","Informe"],"← Volver":["← Back","← Torna"],"Copiar informe":["Copy report","Copia l'informe"],
+"«Descargar PDF» abre el menú de compartir para guardarlo o enviarlo. También puedes copiar el informe como texto o hacer una captura de esta vista.":["\"Download PDF\" opens the share menu to save or send it. You can also copy the report as text or take a screenshot of this view.","«Descarrega el PDF» obre el menú de compartir per desar-lo o enviar-lo. També pots copiar l'informe com a text o fer una captura d'aquesta vista."],
+"Añadir jugadas":["Add plays","Afegeix jugades"],
+"Copia toda la página del partido y pulsa «Añadir y actualizar»: lee el portapapeles. Si no puede, pega el texto en el cuadro.":["Copy the whole match page and press \"Add and update\": it reads the clipboard. If it can't, paste the text into the box.","Copia tota la pàgina del partit i prem «Afegeix i actualitza»: llegeix el porta-retalls. Si no pot, enganxa el text al quadre."],
+"Añadir y actualizar":["Add and update","Afegeix i actualitza"],"Sustituir jugadas":["Replace plays","Substitueix les jugades"],
+"«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).":["\"Add\" keeps what is already saved and does not duplicate. \"Replace\" deletes the saved plays and uses only this paste (useful if the website corrected something).","«Afegeix» conserva el que ja està desat i no duplica. «Substitueix» esborra les jugades desades i només usa aquest enganxat (útil si la web ha corregit alguna cosa)."],
+"Jugador":["Player","Jugador"],"Faltas":["Fouls","Faltes"],"Equipo":["Team","Equip"],"Local":["Home","Local"],"Visitante":["Away","Visitant"],"Partido sin nombre":["Unnamed game","Partit sense nom"],
+"Sin jugadas de puntos ni faltas.":["No scoring plays or fouls.","Sense jugades de punts ni faltes."],"Sin jugadores.":["No players.","Sense jugadors."],"Sin equipo asignado":["No team assigned","Sense equip assignat"],
+"T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.":["T2: points from 2-pointers. T3: points from 3-pointers. TL: free throws. Fouls are those committed by the player, not those received.","T2: punts de tirs de 2. T3: punts de triples. TL: tirs lliures. Les faltes són les comeses pel jugador, sense les rebudes."],
+"Eliminar partido":["Delete game","Elimina el partit"],"Texto original":["Original text","Text original"],
+"Resumen importado: no tiene jugadas y no se puede verificar con la cronología.":["Imported summary: it has no plays and cannot be checked against the play-by-play.","Resum importat: no té jugades i no es pot verificar amb la cronologia."],
+"Ajustes":["Settings","Ajustos"],"Idioma":["Language","Idioma"],"Aspecto":["Appearance","Aspecte"],"Automático":["Automatic","Automàtic"],"Claro":["Light","Clar"],"Oscuro":["Dark","Fosc"],
+"Color principal":["Main colour","Color principal"],"Símbolo del logo":["Logo symbol","Símbol del logo"],"Nombre de la cabecera":["Header name","Nom de la capçalera"],"Tamaño del texto":["Text size","Mida del text"],
+"Normal":["Normal","Normal"],"Grande":["Large","Gran"],"Muy grande":["Extra large","Molt gran"],"Vista previa":["Preview","Previsualització"],"Equipo A":["Team A","Equip A"],"Equipo B":["Team B","Equip B"],"Restaurar valores originales":["Restore defaults","Restaura els valors originals"],
+"Aviso":["Warning","Avís"],
+"No hay texto que importar.":["There is no text to import.","No hi ha text per importar."],"No hay texto que guardar.":["There is no text to save.","No hi ha text per desar."],"No se pudo guardar en este navegador.":["Could not save in this browser.","No s'ha pogut desar en aquest navegador."],
+"El texto no es una copia válida.":["The text is not a valid backup.","El text no és una còpia vàlida."],"Selecciona el texto y cópialo a mano.":["Select the text and copy it by hand.","Selecciona el text i copia'l a mà."],
+"Informe copiado. Pégalo en Notas o WhatsApp.":["Report copied. Paste it in Notes or WhatsApp.","Informe copiat. Enganxa'l a Notes o WhatsApp."],
+"No se pudo copiar solo: selecciona el texto de abajo y cópialo.":["Could not copy automatically: select the text below and copy it.","No s'ha pogut copiar automàticament: selecciona el text de sota i copia'l."],
+"Este navegador no permite descargar el PDF. Usa «Copiar informe».":["This browser does not allow downloading the PDF. Use \"Copy report\".","Aquest navegador no permet descarregar el PDF. Fes servir «Copia l'informe»."],
+"Jugadas sustituidas.":["Plays replaced.","Jugades substituïdes."],"Sin cambios: no hay jugadas nuevas respecto a lo guardado.":["No changes: there are no new plays compared to what is saved.","Sense canvis: no hi ha jugades noves respecte al que està desat."],
+"El portapapeles está vacío. Copia primero la página de la FCBQ.":["The clipboard is empty. Copy the FCBQ page first.","El porta-retalls és buit. Copia primer la pàgina de la FCBQ."],
+"No he podido leer el portapapeles (este móvil puede no permitirlo aquí). Pega el texto en el cuadro y vuelve a pulsar el botón.":["I could not read the clipboard (this phone may not allow it here). Paste the text into the box and press the button again.","No he pogut llegir el porta-retalls (aquest mòbil potser no ho permet aquí). Enganxa el text al quadre i torna a prémer el botó."],
+"No he encontrado jugadas en el texto. Copia la página completa del partido, con la pestaña «Jugada a jugada».":["I found no plays in the text. Copy the full match page, with the \"Jugada a jugada\" tab open.","No he trobat jugades al text. Copia la pàgina completa del partit, amb la pestanya «Jugada a jugada»."],
+"No he encontrado jugadas en el texto. Copia la página completa, con la pestaña «Jugada a jugada» abierta.":["I found no plays in the text. Copy the full page, with the \"Jugada a jugada\" tab open.","No he trobat jugades al text. Copia la pàgina completa, amb la pestanya «Jugada a jugada» oberta."],
+"Parece un resumen de IA: impórtalo en la sección «Importar resumen de IA».":["This looks like an AI summary: import it in the \"Import AI summary\" section.","Sembla un resum d'IA: importa'l a la secció «Importa un resum d'IA»."],
+"No he reconocido el formato. Tiene que traer tablas con barras verticales.":["I did not recognise the format. It must contain tables with vertical bars.","No he reconegut el format. Ha de portar taules amb barres verticals."],
+"No he podido leer los nombres de los equipos.":["I could not read the team names.","No he pogut llegir els noms dels equips."],"No he encontrado la tabla de parciales por período.":["I found no table of period scores.","No he trobat la taula de parcials per període."],"No he encontrado tablas de jugadores.":["I found no player tables.","No he trobat taules de jugadors."]
+};
+var P=[
+[/Última actualización: /g,"Last update: ","Última actualització: "],[/jugadas leídas (\d+) de (\d+)/g,"plays read $1 of $2","jugades llegides $1 de $2"],
+[/ · actualizado /g," · updated "," · actualitzat "],[/Importado /g,"Imported ","Importat "],
+[/Períodos ganados \(cuenta propia, no oficial\): /g,"Periods won (own count, unofficial): ","Períodes guanyats (compte propi, no oficial): "],
+[/Los partidos se guardan en este navegador o app, en este dispositivo\. Se pierden si borras los datos\./g,"Games are stored in this browser or app, on this device. They are lost if you clear the data.","Els partits es desen en aquest navegador o app, en aquest dispositiu. Es perden si esborres les dades."],
+[/Todavía no has hecho ninguna copia de seguridad\./g,"You haven't made a backup yet.","Encara no has fet cap còpia de seguretat."],[/«en juego»/g,"«in play»","«en joc»"],[/«último registrado»/g,"«last recorded»","«últim registrat»"],
+[/Última copia de seguridad: hoy\./g,"Last backup: today.","Última còpia de seguretat: avui."],[/Última copia de seguridad: hace (\d+) días\./g,"Last backup: $1 days ago.","Última còpia de seguretat: fa $1 dies."],
+[/Período (\d+): las jugadas suman (\S+) pero la web indica (\S+)\. Faltan o sobran jugadas\./g,"Period $1: the plays add up to $2 but the website says $3. Plays are missing or extra.","Període $1: les jugades sumen $2 però la web indica $3. Falten o sobren jugades."],
+[/La web indicaba (\d+) jugadas y he leído (\d+) en la última pegada\./g,"The website said $1 plays and I read $2 in the last paste.","La web indicava $1 jugades i n'he llegit $2 a l'últim enganxat."],
+[/Hay jugadores sin equipo asignado: no se ha leído bien la plantilla de uno de los equipos\. Los totales por equipo no son fiables\./g,"Some players have no team assigned: one team's roster was not read properly. Team totals are not reliable.","Hi ha jugadors sense equip assignat: no s'ha llegit bé la plantilla d'un dels equips. Els totals per equip no són fiables."],
+[/P(\d+) figura como «(.+?)»: el marcador puede no ser definitivo\./g,"P$1 is listed as «$2»: the score may not be final.","P$1 figura com a «$2»: el marcador pot no ser definitiu."],
+[/El total indicado en el resumen era (\S+) y los parciales suman (\S+)\. Se muestra la suma de parciales \(marcador real\)\./g,"The total stated in the summary was $1 and the period scores add up to $2. The sum of the periods is shown (real score).","El total indicat al resum era $1 i els parcials sumen $2. Es mostra la suma dels parcials (marcador real)."],
+[/ La web oficial limita a 50 puntos la diferencia que muestra\./g," The official website limits the displayed difference to 50 points."," La web oficial limita a 50 punts la diferència que mostra."],
+[/(.+?): los puntos individuales suman (\d+) y el total del equipo es (\d+) \(diferencia (-?\d+)\)\. No se han corregido\./g,"$1: individual points add up to $2 and the team total is $3 (difference $4). Not corrected.","$1: els punts individuals sumen $2 i el total de l'equip és $3 (diferència $4). No s'han corregit."],
+[/(.+?): (\d+) jugadores sin total de puntos\./g,"$1: $2 players without a points total.","$1: $2 jugadors sense total de punts."],[/(.+?): (\d+) jugadores sin faltas verificadas\./g,"$1: $2 players without verified fouls.","$1: $2 jugadors sense faltes verificades."],
+[/Actualizado: (\d+) jugadas? nuevas? \(canastas y faltas\)\./g,"Updated: $1 new plays (baskets and fouls).","Actualitzat: $1 jugades noves (cistelles i faltes)."],
+[/Restaurados o actualizados: (\d+) partidos\./g,"Restored or updated: $1 games.","Restaurats o actualitzats: $1 partits."],[/Copiado \((\d+) partidos\)\. Pégalo en un sitio seguro\./g,"Copied ($1 games). Paste it somewhere safe.","Copiat ($1 partits). Enganxa'l en un lloc segur."],
+[/El texto copiado es de otro partido \((.*)\)\. No se ha añadido nada a este\./g,"The copied text is from another game ($1). Nothing was added to this one.","El text copiat és d'un altre partit ($1). No s'ha afegit res a aquest."],
+[/No se pudo generar el PDF: /g,"Could not generate the PDF: ","No s'ha pogut generar el PDF: "],[/No se pudo compartir el PDF: /g,"Could not share the PDF: ","No s'ha pogut compartir el PDF: "],
+[/Los valores T2, T3 y TL son canastas, tal como vienen en el resumen\./g,"T2, T3 and TL values are baskets, as given in the summary.","Els valors T2, T3 i TL són cistelles, tal com venen al resum."],
+[/Los valores T2, T3 y TL son puntos identificados solo en parte de las jugadas \(por ejemplo, P7 y P8\), no el desglose completo\./g,"T2, T3 and TL values are points identified only in part of the plays (e.g. P7 and P8), not the full breakdown.","Els valors T2, T3 i TL són punts identificats només en part de les jugades (per exemple, P7 i P8), no el desglossament complet."],
+[/ «—» significa dato no disponible, no cero\./g," \"—\" means data not available, not zero."," «—» vol dir dada no disponible, no zero."],
+[/Informe del partido/g,"Match report","Informe del partit"],[/INFORME DEL PARTIDO/g,"MATCH REPORT","INFORME DEL PARTIT"],[/^PARCIALES$/g,"PERIOD SCORES","PARCIALS"],[/^AVISOS$/g,"WARNINGS","AVISOS"],
+[/Generado el (.*) con Partidos FCBQ/g,"Generated on $1 with Partidos FCBQ","Generat el $1 amb Partidos FCBQ"],
+[/\(Resumen importado: no se puede verificar con jugadas\)/g,"(Imported summary: cannot be checked against plays)","(Resum importat: no es pot verificar amb jugades)"],
+[/T2, T3 y TL: /g,"T2, T3 and TL: ","T2, T3 i TL: "],[/^puntos identificados solo en parte de las jugadas$/g,"points identified only in part of the plays","punts identificats només en part de les jugades"],
+[/^canastas, según el resumen$/g,"baskets, as given in the summary","cistelles, segons el resum"],[/^puntos$/g,"points","punts"],[/«—» = dato no disponible, no cero\./g,"\"—\" = data not available, not zero.","«—» = dada no disponible, no zero."]
+];
+function trT(t,i){var k=t.trim();if(!k)return t;var o=D[k];if(o&&o[i]!=="")return t.replace(k,o[i]);var r=k;for(var j=0;j<P.length;j++)r=r.replace(P[j][0],P[j][i+1]);return r===k?t:t.replace(k,r)}
+function TS(x){if(cfg.lang==="es")return x;return trT(String(x),cfg.lang==="en"?0:1)}
+function tr(h){if(cfg.lang==="es")return h;var i=cfg.lang==="en"?0:1;
+  h=h.replace(/>([^<>]+)</g,function(m,t){return">"+trT(t,i)+"<"});
+  return h.replace(/placeholder='([^']*)'/g,function(m,t){return"placeholder='"+trT(t,i)+"'"})}
 function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){return[]}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(games));return true}catch(e){msg="No se pudo guardar en este navegador.";return false}}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
@@ -111,7 +228,7 @@ function calc(g){
   return r;
 }
 function title(g){return g.teams&&g.teams.length===2?g.teams[0]+" - "+g.teams[1]:"Partido sin nombre"}
-function fmt(ts){return ts?new Date(ts).toLocaleString("es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-"}
+function fmt(ts){return ts?new Date(ts).toLocaleString(LOC[cfg.lang]||"es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-"}
 function tbl(P){
   var ns=Object.keys(P).sort(function(a,b){var x=P[a],y=P[b];return(y.t2+y.t3+y.tl)-(x.t2+x.t3+x.tl)||a.localeCompare(b)});
   if(!ns.length)return'<p class="mu">Sin jugadas de puntos ni faltas.</p>';
@@ -131,8 +248,8 @@ function board(T,tot,N,gets,cp,sub){
 function won(gets,N,cp){var a=0,b=0,n=0;for(var p=1;p<=N;p++){if(p===cp)continue;var x=gets[0](p),y=gets[1](p);if(x===undefined||y===undefined)continue;n++;if(x>y)a++;else if(y>x)b++}
   return n>=2?"<div class='mu'>Períodos ganados (cuenta propia, no oficial): "+a+" – "+b+"</div>":""}
 function home(){
-  var h="<div class='hd'><div class='ic'>"+ball(38)+"</div><div><div class='tt'>Partidos</div><div class='mu'>Seguimiento FCBQ</div></div></div>";
-  h+="<div class='card'><b>Nuevo partido</b><div class='mu'>Pega el texto copiado de la página del partido: pestaña «Jugada a jugada», seleccionar todo y copiar.</div><textarea id='nt' placeholder='Pega aquí el texto'></textarea><div class='row'><button class='p' onclick='saveNew()'>Guardar partido</button></div></div>";
+  var h="<div class='hd'><div class='ic'>"+ball(38)+"</div><div><div class='tt'>"+esc(cfg.title||"Partidos")+"</div><div class='mu'>Seguimiento FCBQ</div></div><button onclick='openSet()' style='margin-left:auto;font-size:1.3rem;padding:8px 12px'>⚙</button></div>";
+  h+="<div class='card'><b>Nuevo partido</b><div class='mu'>Copia la página del partido (pestaña «Jugada a jugada», seleccionar todo, copiar) y pulsa el botón: la app lee el portapapeles. Si no puede, pega el texto en el cuadro.</div><textarea id='nt' placeholder='Pega aquí el texto'></textarea><div class='row'><button class='p' onclick='saveNew()'>Pegar y guardar partido</button></div></div>";
   if(!games.length)h+="<div class='em'>"+ball(64)+"<b>Todavía no hay partidos</b><div class='mu'>Pega arriba el texto de un partido para empezar.</div></div>";
   games.slice().sort(function(a,b){return(b.updated||0)-(a.updated||0)}).forEach(function(g){
     var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),t=imp?g.tot:calc(g).tot;
@@ -150,20 +267,21 @@ function game(g){
   h+=board(T,r.tot,N,gets,cp,g.date)+won(gets,N,cp);
   h+="<div class='mu'>Última actualización: "+fmt(g.updated)+(g.claimed!=null?" · jugadas leídas "+g.parsed+" de "+g.claimed:"")+"</div>";
   r.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
-  if(!rep)h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pégala aquí.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
+  if(!rep)h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pulsa «Añadir y actualizar»: lee el portapapeles. Si no puede, pega el texto en el cuadro.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
   [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+tbl(r.pl[i])});
   if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2]);
   h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
 }
 function saveNew(){
-  var v=document.getElementById("nt").value;if(!v.trim()){msg="No hay texto que guardar.";render();return}
-  var o=parse(v);
-  if(!o.parsed){msg=(/\|/.test(v)&&/PUNTOS|PARCIALES/i.test(v))?"Parece un resumen de IA: impórtalo en la sección «Importar resumen de IA».":"No he encontrado jugadas en el texto. Copia la página completa, con la pestaña «Jugada a jugada» abierta.";render();return}
-  var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};merge(g,o,false);games.push(g);save();cur=g.id;render();
+  getText("nt",function(v){
+    var o=parse(v);
+    if(!o.parsed){msg=(/\|/.test(v)&&/PUNTOS|PARCIALES/i.test(v))?"Parece un resumen de IA: impórtalo en la sección «Importar resumen de IA».":"No he encontrado jugadas en el texto. Copia la página completa, con la pestaña «Jugada a jugada» abierta.";render();return}
+    var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};merge(g,o,false);games.push(g);save();cur=g.id;render();
+  });
 }
 function render(){var g=games.find(function(x){return x.id===cur});
-  document.getElementById("app").innerHTML=(g?(g.kind==="resumen"?gameImp(g):game(g)):home())+(msg?"<div class='wa'>"+esc(msg)+"</div>":"");msg=""}
+  var htm=setv?settings():(g?(g.kind==="resumen"?gameImp(g):game(g)):home());htm+=(msg?"<div class='wa'>"+esc(msg)+"</div>":"");document.getElementById("app").innerHTML=tr(htm);msg=""}
 function newGame(){var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};games.push(g);save();cur=g.id;render()}
 function openGame(id){cur=id;render()}
 var rep=false,repTxt="";
@@ -174,9 +292,9 @@ function pdfBuild(g){
   var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),r=imp?null:calc(g),tot=imp?g.tot:r.tot;
   var ps=imp?Object.keys(g.per).map(Number):r.per,N=nper(g,ps);
   function get(i,p){if(imp)return g.per[p]?g.per[p][i]:undefined;return r.per.indexOf(p)>=0?(r.pp[i][p]||0):undefined}
-  var pages=[],cs,y,OR="0.85 0.33 0.12",GR="0.4 0.4 0.4";
+  var pages=[],cs,y,OR=rgb(cfg.ac).map(function(v){return(v/255).toFixed(3)}).join(" "),GR="0.4 0.4 0.4";
   function np(){cs=[];pages.push(cs);y=800}
-  function tx(x,yy,s,sz,b,col){cs.push((col||"0 0 0")+" rg BT /"+(b?"F2":"F1")+" "+sz+" Tf "+x+" "+yy+" Td ("+pe(s)+") Tj ET")}
+  function tx(x,yy,s,sz,b,col){cs.push((col||"0 0 0")+" rg BT /"+(b?"F2":"F1")+" "+sz+" Tf "+x+" "+yy+" Td ("+pe(TS(s))+") Tj ET")}
   function rc(x,yy,w,h,rgb){cs.push(rgb+" rg "+x+" "+yy+" "+w+" "+h+" re f")}
   function wr(s,n){var o=[],l="";String(s).split(" ").forEach(function(w){if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});if(l)o.push(l);return o}
   function chk(h){if(y-h<45)np()}
@@ -190,13 +308,13 @@ function pdfBuild(g){
   [0,1].forEach(function(i){
     var P=imp?g.pl[i].slice():Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
     P.sort(function(a,b){return(b.tot||0)-(a.tot||0)});
-    chk(60);tx(40,y,T[i].toUpperCase(),11,1);y-=16;rc(40,y-4,515,14,"0.99 0.91 0.87");
+    chk(60);tx(40,y,T[i].toUpperCase(),11,1);y-=16;rc(40,y-4,515,14,rgb(cfg.ac).map(function(v){return((v+(255-v)*.88)/255).toFixed(3)}).join(" "));
     [["Jugador",44],["T2",300],["T3",345],["TL",390],["Total",435],["Faltas",495]].forEach(function(h){tx(h[1],y,h[0],9,1)});y-=16;
     P.forEach(function(p){chk(16);tx(44,y,String(p.n).slice(0,42),9.5,0);[[p.t2,300],[p.t3,345],[p.tl,390],[p.tot,435,1],[p.f,495]].forEach(function(c){tx(c[1],y,String(v(c[0])),9.5,c[2]?1:0)});y-=14});
     y-=10});
-  chk(30);tx(40,y,"T2, T3 y TL: "+(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". «—» = dato no disponible, no cero.",8,0,GR);y-=14;
-  (imp?g.warn:r.warn).forEach(function(s){wr("Aviso: "+s,105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
-  chk(20);tx(40,y-6,"Generado el "+new Date().toLocaleDateString("es-ES")+" con Partidos FCBQ",8,0,"0.5 0.5 0.5");
+  chk(30);tx(40,y,TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."),8,0,GR);y-=14;
+  (imp?g.warn:r.warn).forEach(function(s){wr(TS("Aviso")+": "+TS(s),105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
+  chk(20);tx(40,y-6,"Generado el "+new Date().toLocaleDateString(LOC[cfg.lang]||"es-ES")+" con Partidos FCBQ",8,0,"0.5 0.5 0.5");
   var objs=[];function add(o){objs.push(o)}
   add("<< /Type /Catalog /Pages 2 0 R >>");
   add("<< /Type /Pages /Kids ["+pages.map(function(_,i){return(5+2*i)+" 0 R"}).join(" ")+"] /Count "+pages.length+" >>");
@@ -234,19 +352,19 @@ function closeRep(){rep=false;repTxt="";render()}
 function repText(g){
   var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),r=imp?null:calc(g),tot=imp?g.tot:r.tot;
   var ps=imp?Object.keys(g.per).map(Number).sort(function(a,b){return a-b}):r.per;
-  var L=["INFORME DEL PARTIDO",T[0]+" "+v(tot[0])+" - "+v(tot[1])+" "+T[1]];
+  var L=[TS("INFORME DEL PARTIDO"),T[0]+" "+v(tot[0])+" - "+v(tot[1])+" "+T[1]];
   if(g.date)L.push(g.date);
-  if(imp)L.push("(Resumen importado: no se puede verificar con jugadas)");
-  L.push("","PARCIALES");
+  if(imp)L.push(TS("(Resumen importado: no se puede verificar con jugadas)"));
+  L.push("",TS("PARCIALES"));
   ps.forEach(function(p){var a=imp?g.per[p][0]:(r.pp[0][p]||0),b=imp?g.per[p][1]:(r.pp[1][p]||0);L.push("P"+p+": "+a+" - "+b)});
   [0,1].forEach(function(i){
     L.push("",T[i].toUpperCase());
     var P=imp?g.pl[i]:Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
     P=P.slice().sort(function(a,b){return(b.tot||0)-(a.tot||0)});
-    P.forEach(function(x){L.push(x.n+": T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", Faltas "+v(x.f))})
+    P.forEach(function(x){L.push(x.n+": T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", "+TS("Faltas")+" "+v(x.f))})
   });
-  L.push("","T2, T3 y TL: "+(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". «—» = dato no disponible, no cero.");
-  var w=imp?g.warn:r.warn;if(w.length){L.push("","AVISOS");w.forEach(function(x){L.push("- "+x)})}
+  L.push("",TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."));
+  var w=imp?g.warn:r.warn;if(w.length){L.push("",TS("AVISOS"));w.forEach(function(x){L.push("- "+TS(x))})}
   return L.join("\n");
 }
 function copyRep(){
@@ -258,14 +376,14 @@ function copyRep(){
 function goHome(){cur=null;rep=false;render()}
 function del(){if(!confirm("¿Eliminar este partido guardado?"))return;games=games.filter(function(x){return x.id!==cur});save();cur=null;render()}
 function bkm(t){var e=document.getElementById("bkm");if(e)e.textContent=t}
-function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
+function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games,cfg:cfg});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
   try{navigator.clipboard.writeText(s).then(function(){bkm("Copiado ("+games.length+" partidos). Pégalo en un sitio seguro.")},function(){bkm("Selecciona el texto y cópialo a mano.")})}catch(e){bkm("Selecciona el texto y cópialo a mano.")}}
 function impAll(){var v=document.getElementById("bk").value,d;
   try{d=JSON.parse(v);if(!d||!Array.isArray(d.games))throw 0}catch(e){bkm("El texto no es una copia válida.");return}
+  if(d.cfg){for(var k in d.cfg)cfg[k]=d.cfg[k];saveCfg();applyCfg()}
   var n=0;d.games.forEach(function(g){var i=games.findIndex(function(x){return x.id===g.id});
     if(i<0){games.push(g);n++}else if((g.updated||0)>(games[i].updated||0)){games[i]=g;n++}});
   save();render();bkm("Restaurados o actualizados: "+n+" partidos.")}
-function ball(n){return'<svg width="'+n+'" height="'+n+'" viewBox="0 0 32 32" style="vertical-align:middle" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="#e8662f" stroke="#fff" stroke-width="2"/><g fill="none" stroke="#3b1608" stroke-width="1.6"><path d="M16 2v28M2 16h28"/><path d="M5.5 5.5c6 6 6 15 0 21M26.5 5.5c-6 6-6 15 0 21"/></g></svg>'}
 function nz(x){return x.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim()}
 function tmx(x,T){x=nz(x);if(x.length<2)return-1;for(var i=0;i<2;i++){var t=nz(T[i]);if(t.indexOf(x)>=0||x.indexOf(t)>=0)return i}return-1}
 function nm(x){return/^\d+$/.test(x)?+x:null}
@@ -336,14 +454,26 @@ function gameImp(g){
 function impSum(){var v=document.getElementById("rs").value;if(!v.trim()){msg="No hay texto que importar.";render();return}
   var o=parseSum(v);if(!Object.keys(o.per).length&&!o.pl[0].length&&!o.pl[1].length){msg="No he reconocido el formato. Tiene que traer tablas con barras verticales.";render();return}
   games.push(o);save();cur=o.id;render()}
-function paste(rep){
-  var g=games.find(function(x){return x.id===cur}),v=document.getElementById("tx").value;
-  if(!v.trim()){msg="No hay texto que añadir.";render();return}
-  var o=parse(v);
-  if(!o.parsed){msg="No he encontrado jugadas en el texto. Copia la página completa del partido.";render();return}
-  merge(g,o,rep);save();render();
+function getText(id,cb){
+  var el=document.getElementById(id),v=el&&el.value;
+  if(v&&v.trim()){cb(v);return}
+  var fail=function(){msg="No he podido leer el portapapeles (este móvil puede no permitirlo aquí). Pega el texto en el cuadro y vuelve a pulsar el botón.";render()};
+  try{navigator.clipboard.readText().then(function(t){
+    if(!t||!t.trim()){msg="El portapapeles está vacío. Copia primero la página de la FCBQ.";render();return}cb(t)},fail)}catch(e){fail()}
 }
-render();
+function nEv(g){var n=0;for(var k in g.ev)n+=g.ev[k].n;return n}
+function paste(rep){
+  var g=games.find(function(x){return x.id===cur});if(!g)return;
+  getText("tx",function(v){
+    var o=parse(v);
+    if(!o.parsed){msg="No he encontrado jugadas en el texto. Copia la página completa del partido, con la pestaña «Jugada a jugada».";render();return}
+    if(g.teams&&g.teams.length===2&&o.teams.length===2&&(nz(o.teams[0])!==nz(g.teams[0])||nz(o.teams[1])!==nz(g.teams[1]))){
+      msg="El texto copiado es de otro partido ("+o.teams[0]+" - "+o.teams[1]+"). No se ha añadido nada a este.";render();return}
+    var antes=nEv(g);merge(g,o,rep);save();var d=nEv(g)-antes;
+    msg=rep?"Jugadas sustituidas.":(d>0?"Actualizado: "+d+(d===1?" jugada nueva":" jugadas nuevas")+" (canastas y faltas).":"Sin cambios: no hay jugadas nuevas respecto a lo guardado.");render();
+  });
+}
+applyCfg();render();
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 try{if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
 </script>
