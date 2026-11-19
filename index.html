@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Partidos FCBQ</title>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#d9531e">
-<link rel="icon" href="icon-192.png">
 <style>
 :root{--bg:#f4f5f8;--card:#fff;--soft:#fff4ee;--tx:#17202b;--mu:#667284;--ac:#e25a12;--bd:#f0d9cc;--wa:#b45309;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171d;--card:#1d232c;--soft:#2a211c;--tx:#e8ecf1;--mu:#98a3b3;--ac:#ff8a5c;--bd:#3a3029;--wa:#f5b04c;color-scheme:dark}}
@@ -26,6 +23,7 @@ textarea{width:100%;min-height:120px;box-sizing:border-box;background:var(--card
 .tn{font-weight:700;text-transform:uppercase;font-size:.88rem;line-height:1.2;overflow-wrap:anywhere}.td{font-size:.78rem;color:var(--mu)}
 .pgs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px 0;text-align:center}
 .pc span{display:block;font-size:.78rem;color:var(--mu)}.pc b{font-size:1.25rem}.pc.cur b{color:var(--ac)}.pc i{color:var(--mu);font-style:normal;font-weight:400}
+.cr,.cri{width:var(--z);height:var(--z);border-radius:22%;margin:0 auto 4px;display:block;flex:none;box-sizing:border-box}.cr{object-fit:contain;background:#fff;border:1px solid var(--bd)}.cri{display:grid;place-items:center;background:var(--ac);color:var(--acx,#fff);font-weight:800}.cr.in,.cri.in{display:inline-block;vertical-align:middle;margin:0 6px 0 0}.cri.in{text-align:center;line-height:var(--z)}.pk{cursor:pointer}
 .sw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.93rem}
 th,td{padding:5px 7px;text-align:right;border-bottom:1px solid var(--bd);white-space:nowrap}th:first-child,td:first-child{text-align:left}
 tfoot td{font-weight:700}.it{display:flex;justify-content:space-between;gap:8px;align-items:center}
@@ -35,9 +33,12 @@ summary{font-weight:700;cursor:pointer}.pr{display:none}
 </head>
 <body>
 <main id="app"></main>
+<input type="file" id="cf" accept="image/*" style="display:none">
 <script>
 var KEY="fcbq_partidos_v1",games=load(),cur=null,msg="";
-var cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:"es"},setv=false;
+var cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:"es",chk:false},setv=false;
+var HID=/^(No se ha leído la plantilla|La web indicaba|Período \S+: las jugadas suman|Puntos distintos a los de la web)/;
+function vis(w){return cfg.chk?w:w.filter(function(x){return!HID.test(x)})}
 (function(){try{var c=JSON.parse(localStorage.getItem(KEY+"_cfg")||"null");if(c)for(var k in c)cfg[k]=c[k]}catch(e){}})();
 function saveCfg(){try{localStorage.setItem(KEY+"_cfg",JSON.stringify(cfg))}catch(e){}}
 var LOC={es:"es-ES",en:"en-GB",ca:"ca-ES"};
@@ -61,8 +62,8 @@ whistle:'<circle cx="11" cy="20" r="7"/><path d="M16 15l12-5v6l-8 3M11 13V8"/>',
 jersey:'<path d="M11 4L4 8l3 6 3-2v16h12V12l3 2 3-6-7-4c-1 3-4 3-5 3s-4 0-5-3z"/>'};
 function ic(n,z){return'<svg width="'+z+'" height="'+z+'" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle" aria-hidden="true">'+(LG[n]||LG.ball)+'</svg>'}
 function ball(z){return ic(cfg.logo,z)}
-function setCfg(k,v){cfg[k]=k==="size"?+v:v;saveCfg();applyCfg();render()}
-function resetCfg(){cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:cfg.lang};saveCfg();applyCfg();render()}
+function setCfg(k,v){cfg[k]=k==="size"?+v:(k==="chk"?v==="1":v);saveCfg();applyCfg();render()}
+function resetCfg(){cfg={ac:"#e25a12",mode:"auto",logo:"ball",title:"",size:0,lang:cfg.lang,chk:false};saveCfg();applyCfg();render()}
 function openSet(){setv=true;render()}
 function closeSet(){setv=false;render()}
 function cbtn(l,k,v,on){return"<button class='"+(on?"p":"")+"' onclick='setCfg(\""+k+"\",\""+v+"\")'>"+l+"</button>"}
@@ -74,6 +75,7 @@ function settings(){
   h+="<div class='card'><b>Símbolo del logo</b><div class='row'>"+Object.keys(LG).map(function(n){return"<button class='lg"+(cfg.logo===n?" p":"")+"' onclick='setCfg(\"logo\",\""+n+"\")'>"+ic(n,28)+"</button>"}).join("")+"</div></div>";
   h+="<div class='card'><b>Nombre de la cabecera</b><input type='text' maxlength='24' value='"+esc(cfg.title)+"' placeholder='Partidos' onchange='setCfg(\"title\",this.value)'></div>";
   h+="<div class='card'><b>Tamaño del texto</b><div class='row'>"+cbtn("Normal","size",0,cfg.size===0)+cbtn("Grande","size",1,cfg.size===1)+cbtn("Muy grande","size",2,cfg.size===2)+"</div></div>";
+  h+="<div class='card'><b>Avisos de comprobación</b><div class='mu'>Avisos sobre jugadas que faltan o puntos que no cuadran con la web.</div><div class='row'>"+cbtn("Ocultar","chk","0",!cfg.chk)+cbtn("Mostrar","chk","1",cfg.chk)+"</div></div>";
   h+="<div class='card'><b>Vista previa</b><div class='bs' style='margin-top:8px'><b class='big' style='color:var(--ac)'>74</b><span class='dash'>–</span><b class='big'>5</b><div class='tn'>Equipo A</div><div class='td'></div><div class='tn'>Equipo B</div></div></div>";
   h+="<div class='row'><button onclick='resetCfg()'>Restaurar valores originales</button></div>";
   return h;
@@ -103,7 +105,7 @@ var D={
 "T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.":["T2: points from 2-pointers. T3: points from 3-pointers. TL: free throws. Fouls are those committed by the player, not those received.","T2: punts de tirs de 2. T3: punts de triples. TL: tirs lliures. Les faltes són les comeses pel jugador, sense les rebudes."],
 "Eliminar partido":["Delete game","Elimina el partit"],"Texto original":["Original text","Text original"],
 "Resumen importado: no tiene jugadas y no se puede verificar con la cronología.":["Imported summary: it has no plays and cannot be checked against the play-by-play.","Resum importat: no té jugades i no es pot verificar amb la cronologia."],
-"Ajustes":["Settings","Ajustos"],"Idioma":["Language","Idioma"],"Aspecto":["Appearance","Aspecte"],"Automático":["Automatic","Automàtic"],"Claro":["Light","Clar"],"Oscuro":["Dark","Fosc"],
+"Ajustes":["Settings","Ajustos"],"Avisos de comprobación":["Check warnings","Avisos de comprovació"],"Ocultar":["Hide","Amaga"],"Mostrar":["Show","Mostra"],"Avisos sobre jugadas que faltan o puntos que no cuadran con la web.":["Warnings about missing plays or points that do not match the website.","Avisos sobre jugades que falten o punts que no quadren amb la web."],"Idioma":["Language","Idioma"],"Aspecto":["Appearance","Aspecte"],"Automático":["Automatic","Automàtic"],"Claro":["Light","Clar"],"Oscuro":["Dark","Fosc"],
 "Color principal":["Main colour","Color principal"],"Símbolo del logo":["Logo symbol","Símbol del logo"],"Nombre de la cabecera":["Header name","Nom de la capçalera"],"Tamaño del texto":["Text size","Mida del text"],
 "Normal":["Normal","Normal"],"Grande":["Large","Gran"],"Muy grande":["Extra large","Molt gran"],"Vista previa":["Preview","Previsualització"],"Equipo A":["Team A","Equip A"],"Equipo B":["Team B","Equip B"],"Restaurar valores originales":["Restore defaults","Restaura els valors originals"],
 "Aviso":["Warning","Avís"],
@@ -125,6 +127,7 @@ var P=[
 [/Puntos distintos a los de la web \(calculados \/ web\): /g,"Points different from the website (calculated / website): ","Punts diferents dels de la web (calculats / web): "],
 [/Textos que no he reconocido \(pueden ser acciones nuevas\): /g,"Texts I did not recognise (they may be new actions): ","Textos que no he reconegut (poden ser accions noves): "],
 [/ Es posible que la página no haya cargado todas: desplázala hasta el final de la lista y vuelve a copiar\./g," The page may not have loaded all of them: scroll to the end of the list and copy again."," És possible que la pàgina no les hagi carregat totes: desplaça-la fins al final de la llista i torna a copiar."],
+[/No se ha leído la plantilla de jugadores: los equipos se han deducido por la posición de cada jugada\. Para asegurar las faltas por equipo, abre «Filtres» antes de copiar\./g,"The player roster was not read: teams were deduced from the position of each play. To be sure of fouls by team, open \"Filtres\" before copying.","No s'ha llegit la plantilla de jugadors: els equips s'han deduït per la posició de cada jugada. Per assegurar les faltes per equip, obre «Filtres» abans de copiar."],
 [/Última actualización: /g,"Last update: ","Última actualització: "],[/jugadas leídas (\d+) de (\d+)/g,"plays read $1 of $2","jugades llegides $1 de $2"],
 [/ · actualizado /g," · updated "," · actualitzat "],[/Importado /g,"Imported ","Importat "],
 [/Períodos ganados \(cuenta propia, no oficial\): /g,"Periods won (own count, unofficial): ","Períodes guanyats (compte propi, no oficial): "],
@@ -178,7 +181,8 @@ function parse(text){
   if(mi>=0)o.claimed=+t[mi].match(/\d+/)[0];
   function isTots(i){return t[i+1]&&kx(t[i+1])==="tots"&&t[i+2]==="·"}
   var fa=t.findIndex(function(x,i){return isTots(i)});
-  if(di>=0&&fa>di){var lab=[],li=-1;for(var i=di;i<fa;i++)if(PL.test(t[i])){lab.push(t[i].toUpperCase());li=i}
+  var he=fa>=0?fa:mi;
+  if(di>=0&&he>di){var lab=[],li=-1;for(var i=di;i<he;i++)if(PL.test(t[i])){lab.push(t[i].toUpperCase());li=i}
     if(lab.length>=2&&lab.length<=12){o.labels=lab;o.nper=lab.length;
       var NN=lab.length,HA=[],HB=[],jj=li+2;
       while(HA.length<NN&&/^\d+$/.test(t[jj]||"")){HA.push(+t[jj]);jj++}
@@ -194,19 +198,25 @@ function parse(text){
     if(m)o.roster[m[2]]={team:o.abbr.length-1,dorsal:m[1]};
   }
   var st=mi>=0?mi+1:0,end=t.length;
-  for(var i=st;i<t.length-1;i++)if(kx(t[i])==="quart"&&kx(t[i+1])==="tots"){end=i;break}
+  for(var i=st;i<t.length;i++){var kk2=kx(t[i]);if((kk2==="quart"&&kx(t[i+1]||"")==="tots")||/^(rambla guipuscoa|departaments i comites|mapa web|copyright)/.test(kk2)){end=i;break}}
   var FIN=/^final (quart|prorroga) (\d+)$/;
   var first=null;
   for(var i=st;i<end;i++){var m=kx(t[i]).match(FIN);
     if(m){var n=mapp(m);if(first===null)first=n;var sc=(t[i+1]||"").match(/^(\d+)\s*[·\-–—]\s*(\d+)$/);if(sc)o.markers[n]=[+sc[1],+sc[2]]}}
   var per=first===null?null:first+1;
   var known={};Object.keys(o.roster).concat(o.teams,o.abbr).forEach(function(n){known[kx(n)]=1});
-  var seen={};
+  var seen={},NOR=o.abbr.length===0,SC=[],EV=[];
+  function sideOf(i){var n=t[i+1];if(n===undefined)return null;
+    if(/^(p|pr)\d+(\s*·\s*\d+:\d+)?$/i.test(n)||/^\d+-\d+$/.test(n))return 0;
+    if(/^\+\d+$/.test(n)||/^\d+$/.test(n))return 1;
+    if(n.length<=3&&/^\d+$/.test(t[i+2]||""))return 1;
+    return null}
   function noise(l){var k=kx(l);return known[k]||l.length<=3||/^[+\-]?\d+$/.test(l)||/^\d+:\d+$/.test(l)||PL.test(l)||/^(p|pr)\d+\s*·\s*\d+:\d+$/.test(k)||/^\d+\s*[·\-–—]\s*\d+$/.test(l)||/^final /.test(k)||/^\(\d+\s*(per|fc|pts)/.test(k)}
   for(var i=st;i<end;i++){
     var m=kx(t[i]).match(FIN);if(m){per=mapp(m);continue}
     if(!isAct(t[i])&&/^.+ · .+$/.test(t[i])&&t[i+1]&&/^(p|pr)\d+ · \d+:\d+$/i.test(t[i+1])){o.parsed++;continue}
-    if(!isAct(t[i])){if(!noise(t[i])&&!seen[kx(t[i])]){seen[kx(t[i])]=1;o.unk.push(t[i])}continue}
+    var sm=t[i].match(/^(\d+)-(\d+)$/);if(sm)SC.push([+sm[1],+sm[2]]);
+    if(!isAct(t[i])){if(!noise(t[i])&&!seen[kx(t[i])]&&!(NOR&&t[i+1]&&isAct(t[i+1]))){seen[kx(t[i])]=1;o.unk.push(t[i])}continue}
     o.parsed++;
     var act=t[i],ka=kx(act),name=t[i-1],base=act.replace(/ \(.*\)$/,""),kind=PTS[kx(base)],pm=null,mp=act.match(/\((\d+)\s*pts/i);
     if(mp)pm=+mp[1];
@@ -217,9 +227,21 @@ function parse(text){
     if(p===null)for(var j=i+1;j<end;j++){var q=t[j].match(/^P(\d+)$/i);if(q){p=+q[1];break}}
     if(p===null)continue;
     var sig=p+"|"+name+"|"+(kind==="f"?act:base);
-    if(!o.ev[sig])o.ev[sig]={per:p,name:name,kind:kind,n:0,fc:fc,pm:null};
+    var ly=NOR?sideOf(i):null,dr=null;
+    if(NOR&&ly===0){var a1=t[i-2],a2=t[i-3];if(/^\d+$/.test(a1||""))dr=a1;else if(/^\+\d+$/.test(a1||"")&&/^\d+$/.test(a2||""))dr=a2}
+    else if(NOR&&ly===1){for(var j2=i+1;j2<=i+4&&j2<end;j2++){if(/^\d+$/.test(t[j2])){dr=t[j2];break}}}
+    if(!o.ev[sig])o.ev[sig]={per:p,name:name,kind:kind,n:0,fc:fc,pm:null,tm:ly,d:dr};
+    else if(!o.ev[sig].d&&dr)o.ev[sig].d=dr;
+    if(NOR&&(kind==="t2"||kind==="t3"||kind==="tl"))EV.push({sig:sig,pts:{t2:2,t3:3,tl:1}[kind],side:o.ev[sig].tm});
     if(pm!==null&&(o.ev[sig].pm===null||pm>o.ev[sig].pm))o.ev[sig].pm=pm;
     o.ev[sig].n++;
+  }
+  if(NOR&&EV.length&&SC.length===EV.length){
+    var ag=0,dg=0,tmm=[];
+    EV.forEach(function(e,k){var pv=SC[k+1]||[0,0],da=SC[k][0]-pv[0],db=SC[k][1]-pv[1],q=da===e.pts?0:(db===e.pts?1:null);tmm.push(q);
+      if(q!==null&&e.side!==null){if(q===e.side)ag++;else dg++}});
+    if(dg>ag)for(var sg in o.ev)if(o.ev[sg].tm===0||o.ev[sg].tm===1)o.ev[sg].tm=1-o.ev[sg].tm;
+    EV.forEach(function(e,k){if(tmm[k]!==null)o.ev[e.sig].tm=tmm[k]});
   }
   o.unk=o.unk.slice(0,5);
   return o;
@@ -236,14 +258,15 @@ function merge(g,o,replace){
   for(var k in o.roster)g.roster[k]=o.roster[k];
   for(var k in o.markers)g.markers[k]=o.markers[k];
   if(replace)g.ev={};
-  for(var s in o.ev){var e=o.ev[s];if(!g.ev[s])g.ev[s]={per:e.per,name:e.name,kind:e.kind,n:e.n,fc:e.fc,pm:e.pm==null?null:e.pm};else{g.ev[s].n=Math.max(g.ev[s].n,e.n);if(e.pm!=null&&(g.ev[s].pm==null||e.pm>g.ev[s].pm))g.ev[s].pm=e.pm}}
+  for(var s in o.ev){var e=o.ev[s];if(!g.ev[s])g.ev[s]={per:e.per,name:e.name,kind:e.kind,n:e.n,fc:e.fc,pm:e.pm==null?null:e.pm,tm:e.tm==null?null:e.tm,d:e.d||null};else{if(!g.ev[s].d&&e.d)g.ev[s].d=e.d;if(g.ev[s].tm==null)g.ev[s].tm=e.tm==null?null:e.tm;g.ev[s].n=Math.max(g.ev[s].n,e.n);if(e.pm!=null&&(g.ev[s].pm==null||e.pm>g.ev[s].pm))g.ev[s].pm=e.pm}}
   g.claimed=o.claimed;g.parsed=o.parsed;g.updated=Date.now();
 }
 function calc(g){
   var r={pl:[{},{},{}],pp:[{},{},{}],tot:[0,0,0]},per={};
   for(var s in g.ev){
-    var e=g.ev[s],ro=g.roster[e.name],tm=ro?ro.team:2;if(tm>1)tm=2;
-    var P=r.pl[tm];if(!P[e.name])P[e.name]={t2:0,t3:0,tl:0,f:0,d:ro?ro.dorsal:"?",pm:0};
+    var e=g.ev[s],ro=g.roster[e.name],tm=ro?ro.team:(e.tm==null?2:e.tm);if(tm>1)tm=2;
+    var P=r.pl[tm];if(!P[e.name])P[e.name]={t2:0,t3:0,tl:0,f:0,d:ro?ro.dorsal:(e.d||"?"),pm:0};
+    if(!ro&&e.d&&P[e.name].d==="?")P[e.name].d=e.d;
     if(e.pm)P[e.name].pm=Math.max(P[e.name].pm||0,e.pm);
     if(e.kind==="m")continue;
     if(e.kind==="f"){P[e.name].f+=e.n;if(e.fc)P[e.name].fm=Math.max(P[e.name].fm||0,e.fc)}
@@ -262,12 +285,28 @@ function calc(g){
     else return;
     if(!ok)r.warn.push("Período "+lab+": las jugadas suman "+a+"-"+b+" pero la web indica "+m[0]+"-"+m[1]+". Faltan o sobran jugadas.")});
   if(g.unk&&g.unk.length)r.warn.push("Textos que no he reconocido (pueden ser acciones nuevas): "+g.unk.map(function(x){return"«"+x+"»"}).join(", ")+".");
+  if(!Object.keys(g.roster||{}).length&&Object.keys(g.ev).length)r.warn.push("No se ha leído la plantilla de jugadores: los equipos se han deducido por la posición de cada jugada. Para asegurar las faltas por equipo, abre «Filtres» antes de copiar.");
   var mm=[];r.pl.forEach(function(P){for(var n in P){var x=P[n],c=x.t2+x.t3+x.tl;if(x.pm&&c!==x.pm)mm.push(n+" ("+c+"/"+x.pm+")")}});
   if(mm.length)r.warn.push("Puntos distintos a los de la web (calculados / web): "+mm.join(", ")+".");
   if(g.claimed!=null&&g.parsed!==g.claimed)r.warn.push("La web indicaba "+g.claimed+" jugadas y he leído "+g.parsed+" en la última pegada."+(g.parsed<g.claimed*0.9?" Es posible que la página no haya cargado todas: desplázala hasta el final de la lista y vuelve a copiar.":""));
   if(r.pl[2]&&Object.keys(r.pl[2]).length)r.warn.push("Hay jugadores sin equipo asignado: no se ha leído bien la plantilla de uno de los equipos. Los totales por equipo no son fiables.");
   return r;
 }
+var CRK=KEY+"_crests",CR={},CT=["",""];
+try{CR=JSON.parse(localStorage.getItem(CRK)||"{}")||{}}catch(e){CR={}}
+function saveCR(){try{localStorage.setItem(CRK,JSON.stringify(CR));return true}catch(e){msg="No se pudo guardar el escudo: el almacenamiento está lleno.";return false}}
+function ini(n){var w=String(n).split(/[^A-Za-zÀ-ÿ0-9]+/).filter(function(x){return x&&!/^(cb|bc|club|de|del|la|el|els|les|a|b|c)$/i.test(x)});return(w.length>1?w[0].charAt(0)+w[1].charAt(0):(w[0]||"?").slice(0,2)).toUpperCase()}
+function crest(n,z,i,inl){var s=CR[nz(n)],c=(inl?" in":"")+(i===undefined?"":" pk"),a=i===undefined?"":" onclick='pickCrest("+i+")' title='Cambiar escudo'",st=" style='--z:"+z+"px;font-size:"+Math.round(z*.38)+"px'";
+  return s?"<img class='cr"+c+"' src='"+s+"' alt=''"+st+a+">":"<div class='cri"+c+"'"+st+a+">"+esc(ini(n))+"</div>"}
+function pickCrest(i){var f=document.getElementById("cf");if(!f)return;f.dataset.t=CT[i]||"";f.value="";f.click()}
+function setCrest(file,name){
+  var r=new FileReader();r.onerror=function(){msg="No se pudo leer la imagen.";render()};
+  r.onload=function(){var im=new Image();im.onerror=function(){msg="Ese archivo no es una imagen válida.";render()};
+    im.onload=function(){var S=128,c=document.createElement("canvas");c.width=c.height=S;var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,S,S);
+      var k=Math.min(S/im.width,S/im.height)*.92,w=im.width*k,h=im.height*k;x.drawImage(im,(S-w)/2,(S-h)/2,w,h);
+      var key=nz(name);CR[key]=c.toDataURL("image/jpeg",.85);if(!saveCR())delete CR[key];render()};
+    im.src=r.result};
+  r.readAsDataURL(file)}
 function title(g){return g.teams&&g.teams.length===2?g.teams[0]+" - "+g.teams[1]:"Partido sin nombre"}
 function fmt(ts){return ts?new Date(ts).toLocaleString(LOC[cfg.lang]||"es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-"}
 function tbl(P){
@@ -282,10 +321,10 @@ function lastBk(){try{var t=+localStorage.getItem(KEY+"_bk");if(!t)return"Todav�
 function nper(g,ps){return g.nper||(Math.max.apply(null,ps.concat([0]))>4?8:4)}
 var LAB=null;function lb(p){return LAB&&LAB[p-1]||"P"+p}
 function pcells(get,N,cp){var c=N<=5?N:4,h="<div class='pg' style='grid-template-columns:repeat("+c+",1fr)'>";for(var p=1;p<=N;p++){var v=get(p);h+="<div class='pc"+(p===cp?" cur":"")+"'><span>"+lb(p)+"</span><b>"+(v===undefined?"<i>—</i>":v)+"</b></div>"}return h+"</div>"}
-function board(T,tot,N,gets,cp,sub){
-  var h="<div class='card'><div class='bs'><b class='big'>"+cell(tot[0])+"</b><span class='dash'>–</span><b class='big'>"+cell(tot[1])+"</b>";
+function board(T,tot,N,gets,cp,sub){CT=T;
+  var h="<div class='card'><div class='bs'>"+crest(T[0],56,0)+"<div></div>"+crest(T[1],56,1)+"<b class='big'>"+cell(tot[0])+"</b><span class='dash'>–</span><b class='big'>"+cell(tot[1])+"</b>";
   h+="<div class='tn'>"+esc(T[0])+"</div><div class='td'>"+esc(sub||"")+"</div><div class='tn'>"+esc(T[1])+"</div></div>";
-  return h+"<div class='pgs'>"+pcells(gets[0],N,cp)+pcells(gets[1],N,cp)+"</div>";
+  return h+((CR[nz(T[0])]&&CR[nz(T[1])])?"":"<div class='mu np' style='text-align:center;margin-top:6px'>Toca el círculo de cada equipo para añadir su escudo.</div>")+"<div class='pgs'>"+pcells(gets[0],N,cp)+pcells(gets[1],N,cp)+"</div>";
 }
 function won(gets,N,cp){if(N!==8)return"";var a=0,b=0,n=0;for(var p=1;p<=N;p++){if(p===cp)continue;var x=gets[0](p),y=gets[1](p);if(x===undefined||y===undefined)continue;n++;if(x>y)a++;else if(y>x)b++}
   return n>=2?"<div class='mu'>Períodos ganados (cuenta propia, no oficial): "+a+" – "+b+"</div>":""}
@@ -295,7 +334,7 @@ function home(){
   if(!games.length)h+="<div class='em'>"+ball(64)+"<b>Todavía no hay partidos</b><div class='mu'>Pega arriba el texto de un partido para empezar.</div></div>";
   games.slice().sort(function(a,b){return(b.updated||0)-(a.updated||0)}).forEach(function(g){
     var imp=g.kind==="resumen",T=imp?g.teams:(g.teams&&g.teams.length===2?g.teams:["Local","Visitante"]),t=imp?g.tot:calc(g).tot;
-    h+="<div class='card it'><div><b>"+esc(T[0])+" – "+esc(T[1])+"</b><div><b>"+cell(t[0])+" – "+cell(t[1])+"</b> <span class='mu'>"+(imp?"resumen importado":"con jugadas")+"</span></div><div class='mu'>"+esc(g.date||"")+" · actualizado "+fmt(g.updated)+"</div></div><button onclick='openGame("+g.id+")'>Abrir</button></div>"});
+    h+="<div class='card it'><div><b>"+crest(T[0],22,undefined,1)+esc(T[0])+" – "+crest(T[1],22,undefined,1)+esc(T[1])+"</b><div><b>"+cell(t[0])+" – "+cell(t[1])+"</b> <span class='mu'>"+(imp?"resumen importado":"con jugadas")+"</span></div><div class='mu'>"+esc(g.date||"")+" · actualizado "+fmt(g.updated)+"</div></div><button onclick='openGame("+g.id+")'>Abrir</button></div>"});
   h+="<details class='card'><summary>Importar resumen de IA y copia de seguridad</summary><div style='margin-top:10px'><b>Importar resumen de una IA</b><div class='mu'>Pega el resumen completo (con tablas). Se guarda como «resumen importado».</div><textarea id='rs' placeholder='Pega aquí el resumen'></textarea><div class='row'><button onclick='impSum()'>Importar resumen</button></div></div>";
   h+="<div style='margin-top:10px'><b>Copia de seguridad</b><div class='mu'>Guarda este texto en Notas o envíatelo. Para recuperar, pégalo y pulsa Restaurar.</div><textarea id='bk' placeholder='Aquí aparece la copia, o pega una para restaurar'></textarea><div class='row'><button class='p' onclick='expAll()'>Copiar copia de seguridad</button><button onclick='impAll()'>Restaurar desde texto</button></div><div class='mu' id='bkm'></div></div></details>";
   h+="<p class='mu' style='text-align:center'>Los partidos se guardan en este navegador o app, en este dispositivo. Se pierden si borras los datos. "+esc(lastBk())+"</p>";
@@ -308,9 +347,9 @@ function game(g){LAB=g.labels||null;
   var h="<div class='pr'>"+ball(28)+" Partidos FCBQ</div>"+topbar()+"";
   h+=board(T,r.tot,N,gets,cp,g.date)+won(gets,N,cp)+(g.comp?"<div class='mu' style='text-align:center'>"+esc(g.comp)+"</div>":"");
   h+="<div class='mu'>Última actualización: "+fmt(g.updated)+(g.claimed!=null?" · jugadas leídas "+g.parsed+" de "+g.claimed:"")+"</div>";
-  r.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
+  vis(r.warn).forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
   if(!rep)h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pulsa «Añadir y actualizar»: lee el portapapeles. Si no puede, pega el texto en el cuadro.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
-  [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+tbl(r.pl[i])});
+  [0,1].forEach(function(i){h+="<h2>"+crest(T[i],24,undefined,1)+esc(T[i])+"</h2>"+tbl(r.pl[i])});
   if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2]);
   h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
@@ -341,6 +380,8 @@ function pdfBuild(g){
   function wr(s,n){var o=[],l="";String(s).split(" ").forEach(function(w){if((l+" "+w).trim().length>n){o.push(l);l=w}else l=(l+" "+w).trim()});if(l)o.push(l);return o}
   function chk(h){if(y-h<45)np()}
   np();rc(40,y-22,515,30,OR);tx(50,y-14,"Partidos FCBQ · Informe del partido",13,1,"1 1 1");y-=50;
+  var IM=[],ix=[-1,-1];[0,1].forEach(function(i){var s=CR[nz(T[i])];if(s&&s.indexOf("data:image/jpeg;base64,")===0){try{ix[i]=IM.length;IM.push(atob(s.split(",")[1]))}catch(e){ix[i]=-1}}});
+  if(IM.length){[0,1].forEach(function(i){if(ix[i]>=0)cs.push("q 40 0 0 40 "+[40,310][i]+" "+(y-40)+" cm /Im"+ix[i]+" Do Q")});y-=46}
   [0,1].forEach(function(i){var x=[40,310][i];tx(x,y-30,String(v(tot[i])),40,1,OR);
     wr(T[i].toUpperCase(),30).slice(0,2).forEach(function(l,k){tx(x,y-52-k*12,l,10,1)})});
   y-=95;if(g.date){tx(40,y,g.date+(g.comp?" · "+g.comp:""),9,0,GR);y-=14}
@@ -355,17 +396,17 @@ function pdfBuild(g){
     P.forEach(function(p){chk(16);tx(44,y,String(p.n).slice(0,42),9.5,0);[[p.t2,300],[p.t3,345],[p.tl,390],[p.tot,435,1],[p.f,495]].forEach(function(c){tx(c[1],y,String(v(c[0])),9.5,c[2]?1:0)});y-=14});
     y-=10});
   chk(30);tx(40,y,TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."),8,0,GR);y-=14;
-  (imp?g.warn:r.warn).forEach(function(s){wr(TS("Aviso")+": "+TS(s),105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
+  vis(imp?g.warn:r.warn).forEach(function(s){wr(TS("Aviso")+": "+TS(s),105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
   chk(20);tx(40,y-6,"Generado el "+new Date().toLocaleDateString(LOC[cfg.lang]||"es-ES")+" con Partidos FCBQ",8,0,"0.5 0.5 0.5");
   var objs=[];function add(o){objs.push(o)}
   add("<< /Type /Catalog /Pages 2 0 R >>");
   add("<< /Type /Pages /Kids ["+pages.map(function(_,i){return(5+2*i)+" 0 R"}).join(" ")+"] /Count "+pages.length+" >>");
   add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
   add("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
-  pages.forEach(function(c,i){var st=c.join("\n");
-    add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents "+(6+2*i)+" 0 R >>");
+  var xo="";IM.forEach(function(m,j){xo+="/Im"+j+" "+(5+2*pages.length+j)+" 0 R "});pages.forEach(function(c,i){var st=c.join("\n");
+    add("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << "+xo+">> >> /Contents "+(6+2*i)+" 0 R >>");
     add("<< /Length "+st.length+" >>\nstream\n"+st+"\nendstream")});
-  var out="%PDF-1.4\n",offs=[];
+  var NL=String.fromCharCode(10);IM.forEach(function(b){add("<< /Type /XObject /Subtype /Image /Width 128 /Height 128 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length "+b.length+" >>"+NL+"stream"+NL+b+NL+"endstream")});var out="%PDF-1.4\n",offs=[];
   objs.forEach(function(o,i){offs.push(out.length);out+=(i+1)+" 0 obj\n"+o+"\nendobj\n"});
   var xr=out.length;out+="xref\n0 "+(objs.length+1)+"\n0000000000 65535 f \n";
   offs.forEach(function(o){out+=("0000000000"+o).slice(-10)+" 00000 n \n"});
@@ -406,7 +447,7 @@ function repText(g){
     P.forEach(function(x){L.push(x.n+": T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", "+TS("Faltas")+" "+v(x.f))})
   });
   L.push("",TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."));
-  var w=imp?g.warn:r.warn;if(w.length){L.push("",TS("AVISOS"));w.forEach(function(x){L.push("- "+TS(x))})}
+  var w=vis(imp?g.warn:r.warn);if(w.length){L.push("",TS("AVISOS"));w.forEach(function(x){L.push("- "+TS(x))})}
   return L.join("\n");
 }
 function copyRep(){
@@ -418,11 +459,12 @@ function copyRep(){
 function goHome(){cur=null;rep=false;render()}
 function del(){if(!confirm("¿Eliminar este partido guardado?"))return;games=games.filter(function(x){return x.id!==cur});save();cur=null;render()}
 function bkm(t){var e=document.getElementById("bkm");if(e)e.textContent=t}
-function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games,cfg:cfg});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
+function expAll(){var el=document.getElementById("bk"),s=JSON.stringify({v:1,games:games,cfg:cfg,crests:CR});el.value=s;el.select();try{localStorage.setItem(KEY+"_bk",String(Date.now()))}catch(e){}
   try{navigator.clipboard.writeText(s).then(function(){bkm("Copiado ("+games.length+" partidos). Pégalo en un sitio seguro.")},function(){bkm("Selecciona el texto y cópialo a mano.")})}catch(e){bkm("Selecciona el texto y cópialo a mano.")}}
 function impAll(){var v=document.getElementById("bk").value,d;
   try{d=JSON.parse(v);if(!d||!Array.isArray(d.games))throw 0}catch(e){bkm("El texto no es una copia válida.");return}
   if(d.cfg){for(var k in d.cfg)cfg[k]=d.cfg[k];saveCfg();applyCfg()}
+  if(d.crests){for(var q in d.crests)CR[q]=d.crests[q];saveCR()}
   var n=0;d.games.forEach(function(g){var i=games.findIndex(function(x){return x.id===g.id});
     if(i<0){games.push(g);n++}else if((g.updated||0)>(games[i].updated||0)){games[i]=g;n++}});
   save();render();bkm("Restaurados o actualizados: "+n+" partidos.")}
@@ -489,7 +531,7 @@ function gameImp(g){LAB=null;
   h+=board(T,g.tot,N,gets,g.live||0,g.date)+won(gets,N,g.live||0);
   h+="<div class='mu'>Importado "+fmt(g.updated)+"</div>";
   g.warn.forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
-  [0,1].forEach(function(i){h+="<h2>"+esc(T[i])+"</h2>"+(g.pl[i].length?timp(g.pl[i]):"<p class='mu'>Sin jugadores.</p>")});
+  [0,1].forEach(function(i){h+="<h2>"+crest(T[i],24,undefined,1)+esc(T[i])+"</h2>"+(g.pl[i].length?timp(g.pl[i]):"<p class='mu'>Sin jugadores.</p>")});
   h+="<p class='mu'>"+(g.parcial?"Los valores T2, T3 y TL son puntos identificados solo en parte de las jugadas (por ejemplo, P7 y P8), no el desglose completo.":"Los valores T2, T3 y TL son canastas, tal como vienen en el resumen.")+" «—» significa dato no disponible, no cero.</p><details class='card'><summary>Texto original</summary><pre style='white-space:pre-wrap;font-size:.8rem'>"+esc(g.src)+"</pre></details>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
 }
@@ -520,6 +562,7 @@ function paste(rep){
     msg=rep?"Jugadas sustituidas.":(d>0?"Actualizado: "+d+(d===1?" jugada nueva":" jugadas nuevas")+" (canastas y faltas).":"Sin cambios: no hay jugadas nuevas respecto a lo guardado.");render();
   });
 }
+document.getElementById("cf").addEventListener("change",function(){var f=this.files&&this.files[0];if(f&&this.dataset.t)setCrest(f,this.dataset.t)});
 applyCfg();render();
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 try{if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js")}catch(e){}
