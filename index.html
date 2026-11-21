@@ -16,6 +16,7 @@ h2{font-size:1.05rem;margin:1.2rem 0 .4rem}
 .card{background:linear-gradient(180deg,var(--card),var(--soft));border:1px solid var(--bd);border-radius:20px;padding:14px;margin:12px 0}
 button{font:inherit;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:14px;padding:11px 18px;cursor:pointer}
 button.p{background:var(--ac);border-color:var(--ac);color:var(--acx,#fff);font-weight:700}
+select{font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:5px 8px}
 textarea{width:100%;min-height:120px;box-sizing:border-box;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:10px;font:14px/1.3 monospace;margin-top:8px}
 .row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.mu{color:var(--mu);font-size:.88rem}.wa{color:var(--wa);font-size:.9rem;margin:.3rem 0}
 .em{text-align:center;padding:26px 10px;color:var(--ac)}.em b,.em div{color:var(--tx)}.em div.mu{color:var(--mu)}input[type=text]{width:100%;box-sizing:border-box;font:inherit;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:14px;padding:10px}.sw2{width:44px;height:44px;border-radius:50%;padding:0;border:3px solid transparent}.sw2.on{border-color:var(--tx)}.lg{padding:8px 10px}.em b{display:block;font-size:1.2rem;margin-top:8px}
@@ -81,6 +82,9 @@ function settings(){
   return h;
 }
 var D={
+"Min: tiempo en pista (mm:ss), calculado con las entradas y salidas de cada jugador. «—» = no se ha podido calcular.":["Min: time on court (mm:ss), calculated from each player's entries and exits. \"—\" = could not be calculated.","Min: temps en pista (mm:ss), calculat amb les entrades i sortides de cada jugador. «—» = no s'ha pogut calcular."],
+"Min: tiempo en pista (mm:ss), calculado con las entradas y salidas de cada jugador.":["Min: time on court (mm:ss), calculated from each player's entries and exits.","Min: temps en pista (mm:ss), calculat amb les entrades i sortides de cada jugador."],
+"Duración del período:":["Period length:","Durada del període:"],"Automática":["Automatic","Automàtica"],
 "Partidos":["Games","Partits"],"← Partidos":["← Games","← Partits"],"Seguimiento FCBQ":["FCBQ tracker","Seguiment FCBQ"],
 "Nuevo partido":["New game","Nou partit"],"Pegar y guardar partido":["Paste and save game","Enganxa i desa el partit"],
 "Copia la página del partido (pestaña «Jugada a jugada», seleccionar todo, copiar) y pulsa el botón: la app lee el portapapeles. Si no puede, pega el texto en el cuadro.":["Copy the match page (\"Jugada a jugada\" tab, select all, copy) and press the button: the app reads the clipboard. If it can't, paste the text into the box.","Copia la pàgina del partit (pestanya «Jugada a jugada», selecciona-ho tot, copia) i prem el botó: l'app llegeix el porta-retalls. Si no pot, enganxa el text al quadre."],
@@ -124,6 +128,8 @@ var D={
 "No he podido leer los nombres de los equipos.":["I could not read the team names.","No he pogut llegir els noms dels equips."],"No he encontrado la tabla de parciales por período.":["I found no table of period scores.","No he trobat la taula de parcials per període."],"No he encontrado tablas de jugadores.":["I found no player tables.","No he trobat taules de jugadors."]
 };
 var P=[
+[/Minutos de (.*): los jugadores suman (\S+) y deberían sumar (\S+) \(5 × (\S+)\)\. Puede faltar alguna sustitución o el quinteto inicial, y los minutos pueden estar desviados\./g,"Minutes for $1: the players add up to $2 and should add up to $3 (5 × $4). A substitution or the starting five may be missing, and the minutes may be off.","Minuts de $1: els jugadors sumen $2 i haurien de sumar $3 (5 × $4). Pot faltar alguna substitució o el cinc inicial, i els minuts poden estar desviats."],
+[/Hay (\d+) entradas\/salidas de pista sin reloj legible en la última pegada: no se han contado en los minutos\./g,"There are $1 court entries/exits without a readable clock in the latest paste: they were not counted in the minutes.","Hi ha $1 entrades/sortides de pista sense rellotge llegible a l'últim enganxat: no s'han comptat als minuts."],
 [/Puntos distintos a los de la web \(calculados \/ web\): /g,"Points different from the website (calculated / website): ","Punts diferents dels de la web (calculats / web): "],
 [/Textos que no he reconocido \(pueden ser acciones nuevas\): /g,"Texts I did not recognise (they may be new actions): ","Textos que no he reconegut (poden ser accions noves): "],
 [/ Es posible que la página no haya cargado todas: desplázala hasta el final de la lista y vuelve a copiar\./g," The page may not have loaded all of them: scroll to the end of the list and copy again."," És possible que la pàgina no les hagi carregat totes: desplaça-la fins al final de la llista i torna a copiar."],
@@ -206,6 +212,33 @@ function parse(text){
   var per=first===null?null:first+1;
   var known={};Object.keys(o.roster).concat(o.teams,o.abbr).forEach(function(n){known[kx(n)]=1});
   var seen={},NOR=o.abbr.length===0,SC=[],EV=[];
+  o.sub=[];o.clk={};o.cd=null;o.subNoClk=0;
+  var CLK=/^(p|pr)(\d+)\s*·\s*(\d+):(\d{2})$/i,PLB=/^(p|pr)(\d+)$/i,TIME=/^(\d+):(\d{2})$/,TK={},TE={},CL=[];
+  function pOf(m){return /^pr$/i.test(m[1])?RG+ +m[2]:+m[2]}
+  for(var i=st;i<end;i++){var m=t[i].match(CLK),tk=null;
+    if(m)tk={i:i,e:i,p:pOf(m),c:+m[3]*60+ +m[4],k:1};
+    else if((m=t[i].match(PLB))){var m2=(t[i+1]||"").match(TIME);if(m2)tk={i:i,e:i+1,p:pOf(m),c:+m2[1]*60+ +m2[2],k:2}}
+    if(tk){TK[tk.i]=tk;TE[tk.e]=tk;CL.push(tk);if(tk.k===2)i++}}
+  function isD(x){return/^\d+$/.test(x||"")}
+  function isN(x){return/^\+\d+$/.test(x||"")}
+  function isI(x){return/^[A-ZÀ-Ý.]{1,3}$/.test(x||"")}
+  function clkOf(i){var tk=null,sd=1,dr=null,j,x;
+    if(TK[i+1]&&TK[i+1].k===1){tk=TK[i+1];sd=0;x=t[i-2];if(isN(x))x=t[i-3];if(isD(x))dr=x}
+    else if(TE[i-2]&&TE[i-2].k===1){tk=TE[i-2];x=t[i+1];if(isN(x))x=t[i+2];if(isD(x))dr=x}
+    else if(/^\d+-\d+$/.test(t[i-2]||"")&&TE[i-3]&&TE[i-3].k===1){tk=TE[i-3];x=t[i+1];if(isN(x))x=t[i+2];if(isD(x))dr=x}
+    else{var nd=0,nc=null,d1=null;
+      for(j=i+1;j<end;j++){if(TK[j]&&TK[j].k===2){nc=TK[j];break}
+        if(TK[j])break;x=t[j];if(isD(x)){if(d1===null)d1=x;nd++;continue}if(isN(x)||isI(x))continue;break}
+      if(nc&&nd%2===1){tk=nc;sd=0;dr=d1}
+      else{for(j=i-2;j>=st;j--){if(TE[j]&&TE[j].k===2){tk=TE[j];break}x=t[j];if(TE[j]||TK[j])break;
+          if(isD(x)){if(dr===null)dr=x;continue}if(isN(x)||isI(x))continue;break}
+        if(!tk)dr=null}}
+    return tk?{p:tk.p,c:tk.c,s:sd,d:dr}:null}
+  var lastCk=null,inc=0,dec=0,lastC={};
+  CL.forEach(function(tk){var k=tk.p,sc=tk.c;
+    if(lastC[k]!==undefined){if(sc>lastC[k])inc++;else if(sc<lastC[k])dec++}lastC[k]=sc;
+    if(!o.clk[k])o.clk[k]=[sc,sc];else{if(sc<o.clk[k][0])o.clk[k][0]=sc;if(sc>o.clk[k][1])o.clk[k][1]=sc}});
+  if(inc+dec>0)o.cd=inc>=dec;
   function sideOf(i){var n=t[i+1];if(n===undefined)return null;
     if(/^(p|pr)\d+(\s*·\s*\d+:\d+)?$/i.test(n)||/^\d+-\d+$/.test(n))return 0;
     if(/^\+\d+$/.test(n)||/^\d+$/.test(n))return 1;
@@ -219,6 +252,12 @@ function parse(text){
     if(!isAct(t[i])){if(!noise(t[i])&&!seen[kx(t[i])]&&!(NOR&&t[i+1]&&isAct(t[i+1]))){seen[kx(t[i])]=1;o.unk.push(t[i])}continue}
     o.parsed++;
     var act=t[i],ka=kx(act),name=t[i-1],base=act.replace(/ \(.*\)$/,""),kind=PTS[kx(base)],pm=null,mp=act.match(/\((\d+)\s*pts/i);
+    if(!/^(entra|surt)\b/.test(ka)){var ck0=clkOf(i);if(ck0)lastCk={p:ck0.p,c:ck0.c,s:ck0.s,at:i}}
+    if(/^(entra|surt)\b/.test(ka)){
+      if(name&&!/^(\d+|(P|PR)\d+|\d+:\d+)$/i.test(name)){var ck=clkOf(i);
+        if(!ck&&lastCk&&lastCk.at>=i-8)ck={p:lastCk.p,c:lastCk.c,s:lastCk.s,d:null};
+        if(ck){o.sub.push({p:ck.p,n:name,k:/^entra/.test(ka)?"e":"s",c:ck.c,s:ck.s,d:ck.d});lastCk={p:ck.p,c:ck.c,s:ck.s,at:i}}else o.subNoClk++}
+      continue}
     if(mp)pm=+mp[1];
     var fc=null;
     if(!kind){if(/^tir .* fallat/.test(ka))kind="m";else if(/^falta\b/.test(ka)&&!/rebuda/.test(ka)){kind="f";var m2=act.match(/\((\d+)\s*fc\)/i);if(m2)fc=+m2[1];else if(/per|atac/.test(ka))continue}else continue}
@@ -259,8 +298,49 @@ function merge(g,o,replace){
   for(var k in o.markers)g.markers[k]=o.markers[k];
   if(replace)g.ev={};
   for(var s in o.ev){var e=o.ev[s];if(!g.ev[s])g.ev[s]={per:e.per,name:e.name,kind:e.kind,n:e.n,fc:e.fc,pm:e.pm==null?null:e.pm,tm:e.tm==null?null:e.tm,d:e.d||null};else{if(!g.ev[s].d&&e.d)g.ev[s].d=e.d;if(g.ev[s].tm==null)g.ev[s].tm=e.tm==null?null:e.tm;g.ev[s].n=Math.max(g.ev[s].n,e.n);if(e.pm!=null&&(g.ev[s].pm==null||e.pm>g.ev[s].pm))g.ev[s].pm=e.pm}}
+  if(replace||!g.sub)g.sub=[];
+  var sg2={};g.sub.forEach(function(e){sg2[e.p+"|"+e.n+"|"+e.k+"|"+e.c]=1});
+  (o.sub||[]).forEach(function(e){var q=e.p+"|"+e.n+"|"+e.k+"|"+e.c;if(!sg2[q]){sg2[q]=1;g.sub.push(e)}});
+  if(replace)g.clk={};if(!g.clk)g.clk={};
+  for(var p in (o.clk||{})){var a=o.clk[p],b=g.clk[p];if(!b)g.clk[p]=[a[0],a[1]];else{if(a[0]<b[0])b[0]=a[0];if(a[1]>b[1])b[1]=a[1]}}
+  if(o.cd!==null&&o.cd!==undefined)g.cd=o.cd;
+  g.subNoClk=o.subNoClk||0;
   g.claimed=o.claimed;g.parsed=o.parsed;g.updated=Date.now();
 }
+function fm(sec){if(sec===undefined||sec===null)return"—";sec=Math.round(sec);var m=Math.floor(sec/60),s2=sec%60;return m+":"+(s2<10?"0":"")+s2}
+function plenOf(g,p){if(g.labels&&/^PR/i.test(g.labels[p-1]||""))return 300;
+  if(g.plen)return g.plen*60;var mx=0;for(var k in (g.clk||{}))if(!(g.labels&&/^PR/i.test(g.labels[k-1]||""))&&g.clk[k][1]>mx)mx=g.clk[k][1];
+  if(!mx)(g.sub||[]).forEach(function(e){if(e.c>mx)mx=e.c});
+  if(!mx)return 600;var m=Math.ceil(mx/60),sd=[5,6,7,8,10,12];for(var i=0;i<sd.length;i++)if(sd[i]>=m)return sd[i]*60;return m*60}
+function minutes(g,r,tmap){
+  var res={mn:{},warn:[]};if(!g.sub||!g.sub.length)return res;
+  var cd=g.cd!==false,ps=g.sub.map(function(e){return e.p}).concat(Object.keys(g.clk||{}).map(Number),r.per);
+  var lastP=Math.max.apply(null,ps),st0={},acc=0;
+  for(var p=1;p<=lastP;p++){st0[p]=acc;acc+=plenOf(g,p)}
+  function el(p,c){return cd?plenOf(g,p)-c:c}
+  function gt(e){return st0[e.p]+Math.max(0,Math.min(plenOf(g,e.p),el(e.p,e.c)))}
+  var endG;
+  if(g.markers[lastP]||lastP<Math.max.apply(null,r.per.concat([0]))){endG=st0[lastP]+plenOf(g,lastP)}
+  else{var cl=g.clk&&g.clk[lastP],eg=0;if(cl)eg=cd?plenOf(g,lastP)-cl[0]:cl[1];(g.sub||[]).forEach(function(e){if(e.p===lastP&&el(e.p,e.c)>eg)eg=el(e.p,e.c)});endG=st0[lastP]+eg}
+  var teamOf=tmap;
+  var by=[{},{},{}];
+  g.sub.forEach(function(e){var tm=teamOf[e.n];if(tm===undefined)tm=2;if(tm>1)tm=2;if(!by[tm][e.n])by[tm][e.n]=[];by[tm][e.n].push({t:gt(e),k:e.k})});
+  [0,1,2].forEach(function(tm){
+    var B=by[tm],names=Object.keys(B);if(!names.length)return;
+    var tot=0,start={},ev=[],S=[];
+    names.forEach(function(n){B[n].sort(function(a,b){return a.t-b.t||(a.k==="s"?-1:1)});if(B[n][0].k==="s"){start[n]=0;S.push(n)}});
+    if(tm<2){var Z=Object.keys(r.pl[tm]).filter(function(n){return!B[n]}),d=5-S.length;
+      if(d>0&&Z.length===d)Z.forEach(function(n){start[n]=0;B[n]=[]});}
+    names.forEach(function(n){B[n].forEach(function(x){ev.push({n:n,t:x.t,k:x.k})})});
+    ev.sort(function(a,b){return a.t-b.t||(a.k==="s"?-1:1)});
+    var mn={};for(var n in start)mn[n]=0;names.forEach(function(n){if(mn[n]===undefined)mn[n]=0});
+    ev.forEach(function(e){if(e.k==="e"){if(start[e.n]===undefined)start[e.n]=e.t}else{if(start[e.n]!==undefined){mn[e.n]+=e.t-start[e.n];delete start[e.n]}}});
+    for(var n in start)mn[n]+=endG-start[n];
+    for(var n in mn){res.mn[n]=mn[n];tot+=mn[n]}
+    if(tm<2&&endG>0&&Math.abs(tot-5*endG)>30){var Tn=g.teams&&g.teams[tm]?g.teams[tm]:(tm?"Visitante":"Local");
+      res.warn.push("Minutos de "+Tn+": los jugadores suman "+fm(tot)+" y deberían sumar "+fm(5*endG)+" (5 × "+fm(endG)+"). Puede faltar alguna sustitución o el quinteto inicial, y los minutos pueden estar desviados.")}
+  });
+  return res}
 function calc(g){
   var r={pl:[{},{},{}],pp:[{},{},{}],tot:[0,0,0]},per={};
   for(var s in g.ev){
@@ -284,6 +364,21 @@ function calc(g){
     else if(g.markers[p]){m=g.markers[p];ok=(a===m[0]&&b===m[1])||(ca===m[0]&&cb===m[1])}
     else return;
     if(!ok)r.warn.push("Período "+lab+": las jugadas suman "+a+"-"+b+" pero la web indica "+m[0]+"-"+m[1]+". Faltan o sobran jugadas.")});
+  if(g.sub&&g.sub.length){
+    var tmap={},sv={},ag=0,dg=0;
+    [0,1].forEach(function(i){for(var n in r.pl[i])tmap[n]=i});
+    for(var n in g.roster)tmap[n]=g.roster[n].team;
+    g.sub.forEach(function(e){if(e.s!==undefined){if(!sv[e.n])sv[e.n]=[0,0];sv[e.n][e.s]++}});
+    for(var n in sv)if(tmap[n]!==undefined&&tmap[n]<2){if((sv[n][1]>sv[n][0]?1:0)===tmap[n])ag++;else dg++}
+    var fl=dg>ag?1:0;
+    g.sub.forEach(function(e){var ro=g.roster[e.n],tm=tmap[e.n];
+      if(tm===undefined){tm=e.s===undefined?2:((sv[e.n][1]>sv[e.n][0]?1:0)^fl);tmap[e.n]=tm}
+      if(tm>1)tm=2;if(!r.pl[tm][e.n])r.pl[tm][e.n]={t2:0,t3:0,tl:0,f:0,d:ro?ro.dorsal:(e.d||"?"),pm:0};
+      else if(r.pl[tm][e.n].d==="?"&&e.d)r.pl[tm][e.n].d=e.d});
+    var M=minutes(g,r,tmap);r.mwarn=M.warn;
+    r.pl.forEach(function(P){for(var n in P)if(M.mn[n]!==undefined)P[n].mn=M.mn[n]});r.hasMin=true}
+  if(r.mwarn)r.mwarn.forEach(function(w){r.warn.push(w)});
+  if(g.subNoClk)r.warn.push("Hay "+g.subNoClk+" entradas/salidas de pista sin reloj legible en la última pegada: no se han contado en los minutos.");
   if(g.unk&&g.unk.length)r.warn.push("Textos que no he reconocido (pueden ser acciones nuevas): "+g.unk.map(function(x){return"«"+x+"»"}).join(", ")+".");
   if(!Object.keys(g.roster||{}).length&&Object.keys(g.ev).length)r.warn.push("No se ha leído la plantilla de jugadores: los equipos se han deducido por la posición de cada jugada. Para asegurar las faltas por equipo, abre «Filtres» antes de copiar.");
   var mm=[];r.pl.forEach(function(P){for(var n in P){var x=P[n],c=x.t2+x.t3+x.tl;if(x.pm&&c!==x.pm)mm.push(n+" ("+c+"/"+x.pm+")")}});
@@ -309,13 +404,13 @@ function setCrest(file,name){
   r.readAsDataURL(file)}
 function title(g){return g.teams&&g.teams.length===2?g.teams[0]+" - "+g.teams[1]:"Partido sin nombre"}
 function fmt(ts){return ts?new Date(ts).toLocaleString(LOC[cfg.lang]||"es-ES",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):"-"}
-function tbl(P){
+function tbl(P,hm){
   var ns=Object.keys(P).sort(function(a,b){var x=P[a],y=P[b];return(y.t2+y.t3+y.tl)-(x.t2+x.t3+x.tl)||a.localeCompare(b)});
   if(!ns.length)return'<p class="mu">Sin jugadas de puntos ni faltas.</p>';
-  var s=[0,0,0,0,0],h='<div class="sw"><table><thead><tr><th>Jugador</th><th>T2</th><th>T3</th><th>TL</th><th>Total</th><th>Faltas</th></tr></thead><tbody>';
+  var s=[0,0,0,0,0],h='<div class="sw"><table><thead><tr><th>Jugador</th>'+(hm?'<th>Min</th>':'')+'<th>T2</th><th>T3</th><th>TL</th><th>Total</th><th>Faltas</th></tr></thead><tbody>';
   ns.forEach(function(n){var x=P[n],tt=x.t2+x.t3+x.tl;s[0]+=x.t2;s[1]+=x.t3;s[2]+=x.tl;s[3]+=tt;s[4]+=x.f;
-    h+="<tr><td>"+esc(x.d)+" "+esc(n)+"</td><td>"+x.t2+"</td><td>"+x.t3+"</td><td>"+x.tl+"</td><td><b>"+tt+"</b></td><td>"+x.f+"</td></tr>"});
-  return h+"</tbody><tfoot><tr><td>Equipo</td><td>"+s[0]+"</td><td>"+s[1]+"</td><td>"+s[2]+"</td><td>"+s[3]+"</td><td>"+s[4]+"</td></tr></tfoot></table></div>";
+    h+="<tr><td>"+esc(x.d)+" "+esc(n)+"</td>"+(hm?"<td>"+fm(x.mn)+"</td>":"")+"<td>"+x.t2+"</td><td>"+x.t3+"</td><td>"+x.tl+"</td><td><b>"+tt+"</b></td><td>"+x.f+"</td></tr>"});
+  return h+"</tbody><tfoot><tr><td>Equipo</td>"+(hm?"<td></td>":"")+"<td>"+s[0]+"</td><td>"+s[1]+"</td><td>"+s[2]+"</td><td>"+s[3]+"</td><td>"+s[4]+"</td></tr></tfoot></table></div>";
 }
 function lastBk(){try{var t=+localStorage.getItem(KEY+"_bk");if(!t)return"Todavía no has hecho ninguna copia de seguridad.";var d=Math.floor((Date.now()-t)/864e5);return"Última copia de seguridad: "+(d<1?"hoy":"hace "+d+" días")+"."}catch(e){return""}}
 function nper(g,ps){return g.nper||(Math.max.apply(null,ps.concat([0]))>4?8:4)}
@@ -349,9 +444,9 @@ function game(g){LAB=g.labels||null;
   h+="<div class='mu'>Última actualización: "+fmt(g.updated)+(g.claimed!=null?" · jugadas leídas "+g.parsed+" de "+g.claimed:"")+"</div>";
   vis(r.warn).forEach(function(w){h+="<div class='wa'>⚠ "+esc(w)+"</div>"});h+="</div>";
   if(!rep)h+="<div class='card np'><b>Añadir jugadas</b><div class='mu'>Copia toda la página del partido y pulsa «Añadir y actualizar»: lee el portapapeles. Si no puede, pega el texto en el cuadro.</div><textarea id='tx' placeholder='Pega aquí el texto de la página'></textarea><div class='row'><button class='p' onclick='paste(false)'>Añadir y actualizar</button><button onclick='paste(true)'>Sustituir jugadas</button></div><div class='mu'>«Añadir» conserva lo ya guardado y no duplica. «Sustituir» borra las jugadas guardadas y usa solo esta pegada (útil si la web corrigió algo).</div></div>";
-  [0,1].forEach(function(i){h+="<h2>"+crest(T[i],24,undefined,1)+esc(T[i])+"</h2>"+tbl(r.pl[i])});
-  if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2]);
-  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p>"+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
+  [0,1].forEach(function(i){h+="<h2>"+crest(T[i],24,undefined,1)+esc(T[i])+"</h2>"+tbl(r.pl[i],r.hasMin)});
+  if(Object.keys(r.pl[2]).length)h+="<h2>Sin equipo asignado</h2>"+tbl(r.pl[2],r.hasMin);
+  h+="<p class='mu'>T2: puntos de tiros de 2. T3: puntos de triples. TL: tiros libres. Las faltas cuentan las cometidas por el jugador, sin las recibidas.</p>"+(r.hasMin?"<p class='mu'>Min: tiempo en pista (mm:ss), calculado con las entradas y salidas de cada jugador. «—» = no se ha podido calcular.</p><div class='mu np'>Duración del período: <select onchange='setPlen(this.value)'>"+[[0,"Automática"],[5,"5 min"],[6,"6 min"],[7,"7 min"],[8,"8 min"],[10,"10 min"],[12,"12 min"]].map(function(o){return"<option value='"+o[0]+"'"+((g.plen||0)===o[0]?" selected":"")+">"+o[1]+"</option>"}).join("")+"</select></div>":"")+(rep?"":"<div class='row np'><button onclick='del()'>Eliminar partido</button></div>")+"";
   return h;
 }
 function saveNew(){
@@ -364,6 +459,7 @@ function saveNew(){
 function render(){var g=games.find(function(x){return x.id===cur});
   var htm=setv?settings():(g?(g.kind==="resumen"?gameImp(g):game(g)):home());htm+=(msg?"<div class='wa'>"+esc(msg)+"</div>":"");document.getElementById("app").innerHTML=tr(htm);msg=""}
 function newGame(){var g={id:Date.now(),teams:[],abbr:[],roster:{},markers:{},ev:{},updated:null};games.push(g);save();cur=g.id;render()}
+function setPlen(x){var g=games.find(function(y){return y.id===cur});if(!g)return;g.plen=+x||0;save();render()}
 function openGame(id){cur=id;render()}
 var rep=false,repTxt="";
 function v(x){return x===null||x===undefined?"—":x}
@@ -389,12 +485,14 @@ function pdfBuild(g){
   [0,1].forEach(function(i){var x=[40,310][i],yy=y;for(var rw=0;rw<Math.ceil(N/(N<=5?N:4));rw++){for(var c=0;c<(N<=5?N:4);c++){var p=rw*(N<=5?N:4)+c+1;if(p>N)break;var q=get(i,p);tx(x+c*Math.floor(250/(N<=5?N:4)),yy,(g.labels&&g.labels[p-1]||"P"+p),8,0,GR);tx(x+c*Math.floor(250/(N<=5?N:4)),yy-14,q===undefined?"—":String(q),13,1)}yy-=36}});
   y-=36*Math.ceil(N/(N<=5?N:4))+8;
   [0,1].forEach(function(i){
-    var P=imp?g.pl[i].slice():Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
+    var P=imp?g.pl[i].slice():Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f,mn:x.mn}});
+    var hm=!imp&&r.hasMin;
     P.sort(function(a,b){return(b.tot||0)-(a.tot||0)});
     chk(60);tx(40,y,T[i].toUpperCase(),11,1);y-=16;rc(40,y-4,515,14,rgb(cfg.ac).map(function(v){return((v+(255-v)*.88)/255).toFixed(3)}).join(" "));
-    [["Jugador",44],["T2",300],["T3",345],["TL",390],["Total",435],["Faltas",495]].forEach(function(h){tx(h[1],y,h[0],9,1)});y-=16;
-    P.forEach(function(p){chk(16);tx(44,y,String(p.n).slice(0,42),9.5,0);[[p.t2,300],[p.t3,345],[p.tl,390],[p.tot,435,1],[p.f,495]].forEach(function(c){tx(c[1],y,String(v(c[0])),9.5,c[2]?1:0)});y-=14});
+    [["Jugador",44],["T2",300],["T3",345],["TL",390],["Total",435],["Faltas",495]].concat(hm?[["Min",252]]:[]).forEach(function(h){tx(h[1],y,h[0],9,1)});y-=16;
+    P.forEach(function(p){chk(16);tx(44,y,String(p.n).slice(0,hm?32:42),9.5,0);if(hm)tx(252,y,fm(p.mn),9.5,0);[[p.t2,300],[p.t3,345],[p.tl,390],[p.tot,435,1],[p.f,495]].forEach(function(c){tx(c[1],y,String(v(c[0])),9.5,c[2]?1:0)});y-=14});
     y-=10});
+  if(!imp&&r.hasMin){chk(14);tx(40,y,TS("Min: tiempo en pista (mm:ss), calculado con las entradas y salidas de cada jugador."),8,0,GR);y-=14}
   chk(30);tx(40,y,TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."),8,0,GR);y-=14;
   vis(imp?g.warn:r.warn).forEach(function(s){wr(TS("Aviso")+": "+TS(s),105).forEach(function(l){chk(12);tx(40,y,l,8.5,0,"0.7 0.3 0");y-=11})});
   chk(20);tx(40,y-6,"Generado el "+new Date().toLocaleDateString(LOC[cfg.lang]||"es-ES")+" con Partidos FCBQ",8,0,"0.5 0.5 0.5");
@@ -442,9 +540,9 @@ function repText(g){
   ps.forEach(function(p){var a=imp?g.per[p][0]:(r.pp[0][p]||0),b=imp?g.per[p][1]:(r.pp[1][p]||0);L.push((g.labels&&g.labels[p-1]||"P"+p)+": "+a+" - "+b)});
   [0,1].forEach(function(i){
     L.push("",T[i].toUpperCase());
-    var P=imp?g.pl[i]:Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f}});
+    var P=imp?g.pl[i]:Object.keys(r.pl[i]).map(function(n){var x=r.pl[i][n];return{n:x.d+" "+n,t2:x.t2,t3:x.t3,tl:x.tl,tot:x.t2+x.t3+x.tl,f:x.f,mn:x.mn}});
     P=P.slice().sort(function(a,b){return(b.tot||0)-(a.tot||0)});
-    P.forEach(function(x){L.push(x.n+": T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", "+TS("Faltas")+" "+v(x.f))})
+    P.forEach(function(x){L.push(x.n+": "+(!imp&&r.hasMin?"Min "+fm(x.mn)+", ":"")+"T2 "+v(x.t2)+", T3 "+v(x.t3)+", TL "+v(x.tl)+", Total "+v(x.tot)+", "+TS("Faltas")+" "+v(x.f))})
   });
   L.push("",TS("T2, T3 y TL: ")+TS(imp?(g.parcial?"puntos identificados solo en parte de las jugadas":"canastas, según el resumen"):"puntos")+". "+TS("«—» = dato no disponible, no cero."));
   var w=vis(imp?g.warn:r.warn);if(w.length){L.push("",TS("AVISOS"));w.forEach(function(x){L.push("- "+TS(x))})}
